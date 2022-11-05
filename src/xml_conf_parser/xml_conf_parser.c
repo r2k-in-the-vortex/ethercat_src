@@ -21,32 +21,72 @@
 #include "libxml/parser.h"
 
 /****************************************************************************/
-int ParseVendorId(xmlNode *vendorinfo, long *vendorid){
-    //fprintf(stdout, "\t parsing vendorinfo\n");
-    // first child is supposed to be <Id>, with vendor value, 2 for Beckhoff
-    xmlNode *first_child, *node;
-    char expectedTag[] = "Id"; 
-    int maxcontentlen = 5;
-    char tag_Content[maxcontentlen];
-    int res = -1;
-    char *ptr;
-    //long vendorid = 0;
-
-    first_child = vendorinfo->children;
-    for (node = first_child; node; node = node->next){
-        if(strcmp(node->name, expectedTag) == 0){
-            *vendorid = strtol(node->children->content, &ptr, 10);
-            if(&vendorid != 0) res = 0;
+/****************************************************************************/
+xmlNode * getNextNodeNamed(xmlNode *start, char *name){
+    xmlNode *node;
+    for (node = start; node; node = node->next){
+        if(strcmp(node->name, name) == 0){
+            return node;
         }
     }
-    
-    if (&vendorid == 0)fprintf(stdout, "\t vendor id not found\n");
+    return NULL;
+}
+int countNodesNamed(xmlNode *start, char *name){
+    xmlNode *node;
+    int count = 0;
+    for (node = start; node; node = node->next){
+        if(strcmp(node->name, name) == 0){
+            count++;
+        }
+    }
+    return count;
+}
+// gets exactly one node named name, NULL if start NULL, more that one element with name or none
+xmlNode * getSingularnodeNamed(xmlNode *start, char *name){
+    if (start == NULL)return NULL;
+    int nodecount = countNodesNamed(start, name);
+    if (nodecount != 1)return NULL;
+    xmlNode *node = getNextNodeNamed(start, name);
+    return node;
+}
+char * getNodeTextContent(xmlNode *node){
+    if (node == NULL)return NULL;
+    xmlNode *text = getSingularnodeNamed(node->children, "text");
+    if (text == NULL)return NULL;
+    return text->content;
+}
+char * getAttrTextContent(xmlAttr *attr){
+    if (attr == NULL)return NULL;
+    xmlNode *text = getSingularnodeNamed(attr->children, "text");
+    if (text == NULL)return NULL;
+    return text->content;
+}
+char * getAttributeValueNamed(xmlNode *element, char *name){
+    xmlAttr *attr;
+    for (attr = element->properties; attr; attr = attr->next){
+        if(strcmp(attr->name, name) == 0){
+            return getAttrTextContent(attr);
+        }
+    }
+    return NULL;
+}
 
-    return res;
+/****************************************************************************/
+int getVendorId(xmlNode *slaveinfo, long *vendorid){
+    char *ptr;
+    xmlNode *vendornode = getSingularnodeNamed(slaveinfo->children, "Vendor");
+    xmlNode *idnode = getSingularnodeNamed(vendornode->children, "Id");
+    char *text = getNodeTextContent(idnode);
+    if(text == NULL) return -1;
+    *vendorid = strtol(text, &ptr, 10);
+    if(&vendorid != 0) return 0;
+    fprintf(stdout, "\t vendor id not found\n");
+    return -1;
 }
 
 int ParseDeviceType(xmlNode *typedata, char *producttype, uint *productcode, uint *revisionNo){
-
+    char *productcodestr = getAttributeValueNamed(typedata, "ProductCode");
+    fprintf(stdout, "\t product code %s\n", productcodestr);
     return 0;
 }
 
@@ -59,8 +99,6 @@ int ParseDescriptions(xmlNode *descriptions){
     fprintf(stdout, "\t parsing descriptions\n");
     // <Descriptions><Devices><Device>the good stuff inside here</Device></Devices></Descriptions>
     // one element of devices, inside one device, any deviation from that is not implemented
-    char expectedDevicesElementName[] = "Devices"; 
-    char expectedDeviceElementName[] = "Device"; 
     char expectedTypeElementName[] = "Type"; 
     char expectedNameElementName[] = "Name"; 
     char expectedSmElementName[] = "Sm"; 
@@ -71,28 +109,16 @@ int ParseDescriptions(xmlNode *descriptions){
     device = NULL;
     
     // find devices
-    first_child = descriptions->children;
-    for (node = first_child; node; node = node->next){
-        if(strcmp(node->name, expectedDevicesElementName) == 0){
-            devices = node;
-            break;
-        }
-    }
+    devices = getNextNodeNamed(descriptions->children, "Devices");
     if(devices == NULL){
-        fprintf(stdout, "\t <%s> not found\n", expectedDevicesElementName);
+        fprintf(stdout, "\t <Devices> not found\n");
         return -1;
     }
     
     // find device
-    first_child = devices->children;
-    for (node = first_child; node; node = node->next){
-        if(strcmp(node->name, expectedDeviceElementName) == 0){
-            device = node;
-            break;
-        }
-    }
+    device = getNextNodeNamed(devices->children, "Device");
     if(device == NULL){
-        fprintf(stdout, "\t <%s> not found\n", expectedDeviceElementName);
+        fprintf(stdout, "\t <Device> not found\n");
         return -1;
     }
     // device has elements of interest - type, name, sm(don't know what that does, but it's probably important), RxPDO(outputs), TxPDO(inputs)
@@ -120,19 +146,21 @@ int ParseSlave(xmlNode *slaveinfo){
     xmlNode *first_child, *node;
     long vendorid;
 
-    char expectedVendorElementName[] = "Vendor"; 
+    if(getVendorId(slaveinfo, &vendorid) != 0){
+        fprintf(stdout, "\t failed to get vendor id %ld\n", vendorid);
+        return -1;
+    }
+    fprintf(stdout, "\t vendor id %ld\n", vendorid);
+
     char expectedDescriptionsElementName[] = "Descriptions"; 
 
     first_child = slaveinfo->children;
     for (node = first_child; node; node = node->next){
-        if(strcmp(node->name, expectedVendorElementName) == 0){
-            if(ParseVendorId(node, &vendorid))return -1;
-        } else if(strcmp(node->name, expectedDescriptionsElementName) == 0) {
+        if(strcmp(node->name, expectedDescriptionsElementName) == 0) {
             if(ParseDescriptions(node))return -1;
         }
     }
     
-    fprintf(stdout, "\t vendor id %ld\n", vendorid);
 
     return 0;
 }
@@ -163,9 +191,6 @@ int parse_xml_config(char *filename){
                 // failed to parse slave
                 return -1;
             }
-        }
-        else{
-            ; // why is it getting elements that arent there?
         }
     }
     fprintf(stdout, "...\n");
