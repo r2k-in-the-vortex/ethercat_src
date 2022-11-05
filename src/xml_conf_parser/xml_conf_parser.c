@@ -84,16 +84,17 @@ int getVendorId(xmlNode *slaveinfo, long *vendorid){
     return -1;
 }
 
-int ParseDeviceType(xmlNode *typedata, char *producttype, uint *productcode, uint *revisionNo){
-    char *productcodestr = getAttributeValueNamed(typedata, "ProductCode");
-    fprintf(stdout, "\t product code %s\n", productcodestr);
+int ParseDeviceType(xmlNode *typedata, char *producttype, char *productcode, char *revisionNo){
+    productcode = getAttributeValueNamed(typedata, "ProductCode");
+    revisionNo = getAttributeValueNamed(typedata, "RevisionNo");
+    producttype = getNodeTextContent(typedata);
+    fprintf(stdout, "\t %s product code %s, rev %s\n", producttype, productcode, revisionNo);
     return 0;
 }
 
 int ParseDescriptions(xmlNode *descriptions){
     // data out
-    uint productcode, revisionNo;
-    char *producttype;
+    char *producttype, *productcode, *revisionNo;
 
     // parse
     fprintf(stdout, "\t parsing descriptions\n");
@@ -126,7 +127,7 @@ int ParseDescriptions(xmlNode *descriptions){
     first_child = device->children;
     for (node = first_child; node; node = node->next){
         if(strcmp(node->name, expectedTypeElementName) == 0){
-            if(ParseDeviceType(node, producttype, &productcode, &revisionNo))return -1;
+            if(ParseDeviceType(node, producttype, productcode, revisionNo))return -1;
         }/* else if(strcmp(node->name, expectedNameElementName) == 0) {
             if(ParseDeviceName(node))return -1;
         } else if(strcmp(node->name, expectedSmElementName) == 0) {
