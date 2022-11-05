@@ -1,0 +1,15 @@
+set(LIB_NAME xml_conf_parser)
+
+add_library(${LIB_NAME} "")
+
+target_sources(${LIB_NAME}
+  PRIVATE
+    xml_conf_parser.c
+  PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/xml_conf_parser.h
+  )
+
+target_include_directories(${LIB_NAME}
+  PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}
+)
