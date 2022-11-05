@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "cmdline.h"
-#include "libxml/parser.h"
 #include "xml_conf_parser.h"
 /****************************************************************************/
 
@@ -36,19 +35,6 @@ int main(int argc, char **argv)
     
     parse_xml_config(ai.filename_arg);
 
-    /*
-    xmlDoc         *document;
-    xmlNode        *root, *first_child, *node;
-
-    document = xmlReadFile(ai.filename_arg, NULL, 0);
-    root = xmlDocGetRootElement(document);
-    fprintf(stdout, "Root is <%s> (%i)\n", root->name, root->type);
-    first_child = root->children;
-    for (node = first_child; node; node = node->next) {
-        fprintf(stdout, "\t Child is <%s> (%i)\n", node->name, node->type);
-    }
-    fprintf(stdout, "...\n");
-    */
     return ret;
 }
 

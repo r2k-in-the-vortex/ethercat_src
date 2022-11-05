@@ -23,7 +23,7 @@
 /****************************************************************************/
 int parse_xml_config(char *filename){
     printf("parsing file %s\n", filename);
-    /*
+    
     xmlDoc         *document;
     xmlNode        *root, *first_child, *node;
 
@@ -35,7 +35,7 @@ int parse_xml_config(char *filename){
         fprintf(stdout, "\t Child is <%s> (%i)\n", node->name, node->type);
     }
     fprintf(stdout, "...\n");
-    */
+    
     return 0;
 }
 /****************************************************************************/
