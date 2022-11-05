@@ -9,7 +9,12 @@ target_sources(${LIB_NAME}
     ${CMAKE_CURRENT_LIST_DIR}/xml_conf_parser.h
   )
   
-find_package(libxml2 REQUIRED)
+
+
+  FIND_PACKAGE(LibXml2 ${DEPS_HINTS})
+  IF(NOT LIBXML2_LIBRARIES)
+      FIND_LIBRARY(LibXml2 REQUIRED ${DEPS_HINTS})
+  ENDIF()
 
 target_include_directories(${LIB_NAME}
   PUBLIC
