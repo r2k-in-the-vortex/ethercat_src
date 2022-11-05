@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include "cmdline.h"
 #include "xml_conf_parser.h"
+#include "libxml/parser.h"
 /****************************************************************************/
 
 int main(int argc, char **argv)
