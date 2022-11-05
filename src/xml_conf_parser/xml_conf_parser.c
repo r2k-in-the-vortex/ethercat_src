@@ -17,10 +17,25 @@
 /****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "libxml/parser.h"
 
 /****************************************************************************/
 int parse_xml_config(char *filename){
     printf("parsing file %s\n", filename);
+    /*
+    xmlDoc         *document;
+    xmlNode        *root, *first_child, *node;
+
+    document = xmlReadFile(filename, NULL, 0);
+    root = xmlDocGetRootElement(document);
+    fprintf(stdout, "Root is <%s> (%i)\n", root->name, root->type);
+    first_child = root->children;
+    for (node = first_child; node; node = node->next) {
+        fprintf(stdout, "\t Child is <%s> (%i)\n", node->name, node->type);
+    }
+    fprintf(stdout, "...\n");
+    */
     return 0;
 }
 /****************************************************************************/

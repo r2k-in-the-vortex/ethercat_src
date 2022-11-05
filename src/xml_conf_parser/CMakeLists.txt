@@ -8,8 +8,14 @@ target_sources(${LIB_NAME}
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/xml_conf_parser.h
   )
+  
+find_package(libxml2 REQUIRED)
 
 target_include_directories(${LIB_NAME}
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
 )
+
+target_link_libraries(${LIB_NAME}
+    LibXml2::LibXml2
+  )
