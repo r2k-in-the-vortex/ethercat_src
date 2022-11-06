@@ -23,24 +23,57 @@
 #include "ecat_handler.h"
 
 /****************************************************************************/
-static ec_master_t *master_ = NULL;
+/****************************************************************************/
+
+/** Task period in ns. */
+#define PERIOD_NS   (1000000)
+
+#define MAX_SAFE_STACK (8 * 1024) /* The maximum stack size which is
+                                     guranteed safe to access without
+                                     faulting */
+
+/****************************************************************************/
+
+/* Constants */
+#define NSEC_PER_SEC (1000000000)
+#define FREQUENCY (NSEC_PER_SEC / PERIOD_NS)
+
+/****************************************************************************/
+
+// EtherCAT
+static ec_master_t *master = NULL;
+static ec_master_state_t master_state = {};
+
+static ec_domain_t *domain1 = NULL;
+static ec_domain_state_t domain1_state = {};
+
 /****************************************************************************/
 int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
     log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
 
-    master_ = ecrt_request_master(config->master_index);
-    if (!master_){
+    master = ecrt_request_master(config->master_index);
+    if (!master){
         log_error("Didn't load /dev/EtherCAT%i, unable to continue", config->master_index);
         log_error("Try 'sudo ethercat master' to verify etherlabs installation is working");
         return -1;
     }
+    log_trace("/dev/EtherCAT%i open", config->master_index);
+
+    // support for multiple domains in future?
+    log_trace("Creating domain");
+    domain1 = ecrt_master_create_domain(master);
+    if (!domain1) {
+        log_error("Failed to create domain");
+        goto out_release_master;
+    }
+
 
     return 0;
     
 out_release_master:
 	log_error("Releasing master");
-	ecrt_release_master(master_);
+	ecrt_release_master(master);
     return -1;
 }
 /****************************************************************************/
