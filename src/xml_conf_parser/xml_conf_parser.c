@@ -111,6 +111,24 @@ int ParseDeviceName(xmlNode *namenode, char *name){
     fprintf(stdout, "\t %s\n", name);
     return 0;
 }
+int ParsePdo(xmlNode *node){
+    char *nodename, *sm, *fixed, *mandatory, *index, *name, *entryindex, *subindex, *bitlen, *entryname, *datatype;
+    xmlNode *entry;
+    nodename = node->name;
+    sm = getAttributeValueNamed(node, "Sm");
+    fixed = getAttributeValueNamed(node, "Fixed");
+    mandatory = getAttributeValueNamed(node, "Mandatory");
+    index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
+    name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
+    entry = getSingularnodeNamed(node->children, "Entry");
+    entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
+    subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+    bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
+    entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
+    datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
+    fprintf(stdout, "\t %s %s %s %s %s %s %s %s %s %s %s \n", nodename, sm, fixed, mandatory, index, name, entryindex, subindex, bitlen, entryname, datatype);
+    return 0;
+}
 
 int ParseDescriptions(xmlNode *descriptions){
     // data out
@@ -125,49 +143,28 @@ int ParseDescriptions(xmlNode *descriptions){
     char expectedSmElementName[] = "Sm"; 
     char expectedRxPDOElementName[] = "RxPdo"; 
     char expectedTxPDOElementName[] = "TxPdo"; 
-    xmlNode *first_child, *node;
+    xmlNode *first_child, *node, *start;
     xmlNode *devices = getSingularnodeNamed(descriptions->children, "Devices");
     xmlNode *device = getSingularnodeNamed(devices->children, "Device");
     xmlNode *typenode = getSingularnodeNamed(device->children, "Type");
     xmlNode *namenode = getSingularnodeNamed(device->children, "Name");
 
     if(ParseDeviceType(typenode, producttype, productcode, revisionNo))return -1;
-
     if(ParseDeviceName(namenode, name))return -1;
-    /*
-    devices = NULL;
-    device = NULL;
-    
-    // find devices
-    devices = getNextNodeNamed(descriptions->children, "Devices");
-    if(devices == NULL){
-        fprintf(stdout, "\t <Devices> not found\n");
-        return -1;
+    int RxPdoCount = countNodesNamed(device->children, "RxPdo");
+    int TxPdoCount = countNodesNamed(device->children, "TxPdo");
+    fprintf(stdout, "\t RxPdos %i | TxPdos %i\n", RxPdoCount, TxPdoCount);
+    start = device->children;
+    for (int i = 0; i< RxPdoCount;i++){
+        start = getNextNodeNamed(start, "RxPdo");
+        ParsePdo(start);
     }
-    
-    // find device
-    device = getNextNodeNamed(devices->children, "Device");
-    if(device == NULL){
-        fprintf(stdout, "\t <Device> not found\n");
-        return -1;
+    start = device->children;
+    for (int i = 0; i< TxPdoCount;i++){
+        start = getNextNodeNamed(start, "TxPdo");
+        ParsePdo(start);
     }
-    // device has elements of interest - type, name, sm(don't know what that does, but it's probably important), RxPDO(outputs), TxPDO(inputs)
-    // find device
-    first_child = device->children;
-    for (node = first_child; node; node = node->next){
-        if(strcmp(node->name, expectedTypeElementName) == 0){
-            if(ParseDeviceType(node, producttype, productcode, revisionNo))return -1;
-        }/* else if(strcmp(node->name, expectedNameElementName) == 0) {
-            if(ParseDeviceName(node))return -1;
-        } else if(strcmp(node->name, expectedSmElementName) == 0) {
-            ; // what is Sm good for?
-        } else if(strcmp(node->name, expectedRxPDOElementName) == 0) {
-            if(ParseDeviceRxPDO(node))return -1;
-        } else if(strcmp(node->name, expectedTxPDOElementName) == 0) {
-            if(ParseDeviceTxPDO(node))return -1;
-        }
-    }
-    */
+
     return 0;
 }
 
