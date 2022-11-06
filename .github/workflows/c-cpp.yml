@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-
+#
     runs-on: ubuntu-latest
 
     steps:
@@ -16,13 +16,17 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Check submodules
-      run: ls ${{github.workspace}}/external/ethercat
+      run: pwd
     - name: Bootstrap ethercat
-      shell: bash
-      run: .${{github.workspace}}/external/ethercat/bootstrap
+      run: |
+      # make file runnable, might not be necessary
+      chmod +x "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
+      # run script
+      "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
     - name: configure ethercat
       shell: bash
-      run: .${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
+      run: |
+      .${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
     - name: make ethercat
       run: make -C external/ethercat/
     - name: make install ethercat
