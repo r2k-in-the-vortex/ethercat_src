@@ -28,7 +28,7 @@ jobs:
     - name: configure ethercat
       shell: bash
       run: |
-        .${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
+        cd external/ethercat/ && ./configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no && cd ../..
     - name: make ethercat
       run: make -C external/ethercat/
     - name: make install ethercat
