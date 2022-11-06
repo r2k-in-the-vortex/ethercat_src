@@ -112,22 +112,21 @@ int ParseDeviceName(xmlNode *namenode, char *name){
     fprintf(stdout, "\t %s\n", name);
     return 0;
 }
-int ParsePdo(xmlNode *node){
-    const char *nodename, *sm, *fixed, *mandatory, *index, *name, *entryindex, *subindex, *bitlen, *entryname, *datatype;
+int ParsePdo(xmlNode *node, EcatPdo *pdo){
     xmlNode *entry;
-    nodename = node->name;
-    sm = getAttributeValueNamed(node, "Sm");
-    fixed = getAttributeValueNamed(node, "Fixed");
-    mandatory = getAttributeValueNamed(node, "Mandatory");
-    index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
-    name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
+    pdo->pdotype = node->name;
+    pdo->sm = getAttributeValueNamed(node, "Sm");
+    pdo->fixed = getAttributeValueNamed(node, "Fixed");
+    pdo->mandatory = getAttributeValueNamed(node, "Mandatory");
+    pdo->index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
+    pdo->name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
     entry = getSingularnodeNamed(node->children, "Entry");
-    entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
-    subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
-    bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
-    entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
-    datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
-    fprintf(stdout, "\t %s %s %s %s %s %s %s %s %s %s %s \n", nodename, sm, fixed, mandatory, index, name, entryindex, subindex, bitlen, entryname, datatype);
+    pdo->entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
+    pdo->subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+    pdo->bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
+    pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
+    pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
+    fprintf(stdout, "\t %s %s %s %s %s %s %s %s %s %s %s \n", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
 
@@ -155,17 +154,29 @@ int ParseDescriptions(xmlNode *descriptions){
     int RxPdoCount = countNodesNamed(device->children, "RxPdo");
     int TxPdoCount = countNodesNamed(device->children, "TxPdo");
     fprintf(stdout, "\t RxPdos %i | TxPdos %i\n", RxPdoCount, TxPdoCount);
-    start = device->children;
-    for (int i = 0; i< RxPdoCount;i++){
-        start = getNextNodeNamed(start, "RxPdo");
-        ParsePdo(start);
+
+    EcatPdo *RxPdos, *TxPdos;
+    RxPdos = (EcatPdo*) malloc(RxPdoCount * sizeof(EcatPdo));
+    TxPdos = (EcatPdo*) malloc(TxPdoCount * sizeof(EcatPdo));
+    if (RxPdos == NULL || TxPdos == NULL){
+        fprintf(stdout, "\t failed to alloc\n");
+        return -1;
     }
     start = device->children;
     for (int i = 0; i< TxPdoCount;i++){
         start = getNextNodeNamed(start, "TxPdo");
-        ParsePdo(start);
+        ParsePdo(start, &TxPdos[i]);
+        start = start->next;
+    }
+    start = device->children;
+    for (int i = 0; i< RxPdoCount;i++){
+        start = getNextNodeNamed(start, "RxPdo");
+        ParsePdo(start, &RxPdos[i]);
+        start = start->next;
     }
 
+    free(RxPdos);
+    free(TxPdos);
     return 0;
 }
 
