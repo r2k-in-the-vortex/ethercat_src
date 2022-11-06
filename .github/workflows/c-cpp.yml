@@ -19,8 +19,7 @@ jobs:
       run: pwd
     - name: Bootstrap ethercat
       run: |
-      chmod +x "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
-      "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
+      ${GITHUB_WORKSPACE}/.github/ethercat/bootstrap
     - name: configure ethercat
       shell: bash
       run: |
