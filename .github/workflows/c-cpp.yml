@@ -19,9 +19,7 @@ jobs:
       run: pwd
     - name: Bootstrap ethercat
       run: |
-      # make file runnable, might not be necessary
       chmod +x "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
-      # run script
       "${GITHUB_WORKSPACE}/.github/ethercat/bootstrap"
     - name: configure ethercat
       shell: bash
