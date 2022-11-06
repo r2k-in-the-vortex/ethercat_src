@@ -18,6 +18,7 @@ jobs:
     - name: Check submodules
       run: pwd
     - name: Bootstrap ethercat
+      shell: bash
       run: |
       ${GITHUB_WORKSPACE}/.github/ethercat/bootstrap
     - name: configure ethercat
