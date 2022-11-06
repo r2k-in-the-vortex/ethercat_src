@@ -16,9 +16,9 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Bootstrap ethercat
-      run: ./${{github.workspace}}/external/ethercat/bootstrap
+      run: .${{github.workspace}}/external/ethercat/bootstrap
     - name: configure ethercat
-      run: ./${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
+      run: .${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
     - name: make ethercat
       run: make -C external/ethercat/
     - name: make install ethercat
