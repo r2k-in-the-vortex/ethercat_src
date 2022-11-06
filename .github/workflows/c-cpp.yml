@@ -20,11 +20,11 @@ jobs:
     - name: ls submodules
       shell: bash
       run: |
-        ls /external/ethercat/bootstrap
+        ls external/ethercat/bootstrap
     - name: Bootstrap ethercat
       shell: bash
       run: |
-        ./external/ethercat/bootstrap
+        .external/ethercat/bootstrap
     - name: configure ethercat
       shell: bash
       run: |
