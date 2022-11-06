@@ -24,7 +24,7 @@ jobs:
     - name: Bootstrap ethercat
       shell: bash
       run: |
-        ./external/ethercat/bootstrap
+        cd external/ethercat/ && ./bootstrap && cd ../..
     - name: configure ethercat
       shell: bash
       run: |
