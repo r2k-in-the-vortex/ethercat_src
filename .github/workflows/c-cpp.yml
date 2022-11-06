@@ -13,6 +13,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: Bootstrap ethercat
+      run: ./${{github.workspace}}/external/ethercat/bootstrap
+    - name: configure ethercat
+      run: ./${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
+    - name: make ethercat
+      run: make -C external/ethercat/
+    - name: make install ethercat
+      run: sudo make install -C external/ethercat/
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
