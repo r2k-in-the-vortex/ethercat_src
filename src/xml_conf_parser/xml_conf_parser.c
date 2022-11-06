@@ -25,6 +25,7 @@
 xmlNode * getNextNodeNamed(xmlNode *start, char *name){
     xmlNode *node;
     for (node = start; node; node = node->next){
+        if (node->name == NULL)return NULL;
         if(strcmp(node->name, name) == 0){
             return node;
         }
@@ -35,6 +36,7 @@ int countNodesNamed(xmlNode *start, char *name){
     xmlNode *node;
     int count = 0;
     for (node = start; node; node = node->next){
+        if (node->name == NULL)return NULL;
         if(strcmp(node->name, name) == 0){
             count++;
         }
@@ -51,6 +53,7 @@ xmlNode * getSingularnodeNamed(xmlNode *start, char *name){
 }
 char * getNodeTextContent(xmlNode *node){
     if (node == NULL)return NULL;
+    if (node->children == NULL)return NULL;
     xmlNode *text = getSingularnodeNamed(node->children, "text");
     if (text == NULL)return NULL;
     return text->content;
@@ -85,16 +88,33 @@ int getVendorId(xmlNode *slaveinfo, long *vendorid){
 }
 
 int ParseDeviceType(xmlNode *typedata, char *producttype, char *productcode, char *revisionNo){
+    if(typedata == NULL){
+        fprintf(stdout, "\t Typenode NULL\n");
+        return -1;
+    }
     productcode = getAttributeValueNamed(typedata, "ProductCode");
     revisionNo = getAttributeValueNamed(typedata, "RevisionNo");
     producttype = getNodeTextContent(typedata);
     fprintf(stdout, "\t %s product code %s, rev %s\n", producttype, productcode, revisionNo);
     return 0;
 }
+int ParseDeviceName(xmlNode *namenode, char *name){
+    if(namenode == NULL){
+        fprintf(stdout, "\t name node not found\n");
+        return -1;
+    }
+    name = namenode->children->content;
+    if(name == NULL){
+        fprintf(stdout, "\t no name parsed\n");
+        return -1;
+    }
+    fprintf(stdout, "\t %s\n", name);
+    return 0;
+}
 
 int ParseDescriptions(xmlNode *descriptions){
     // data out
-    char *producttype, *productcode, *revisionNo;
+    char *producttype, *productcode, *revisionNo, *name;
 
     // parse
     fprintf(stdout, "\t parsing descriptions\n");
@@ -105,7 +125,16 @@ int ParseDescriptions(xmlNode *descriptions){
     char expectedSmElementName[] = "Sm"; 
     char expectedRxPDOElementName[] = "RxPdo"; 
     char expectedTxPDOElementName[] = "TxPdo"; 
-    xmlNode *first_child, *node, *devices, *device;
+    xmlNode *first_child, *node;
+    xmlNode *devices = getSingularnodeNamed(descriptions->children, "Devices");
+    xmlNode *device = getSingularnodeNamed(devices->children, "Device");
+    xmlNode *typenode = getSingularnodeNamed(device->children, "Type");
+    xmlNode *namenode = getSingularnodeNamed(device->children, "Name");
+
+    if(ParseDeviceType(typenode, producttype, productcode, revisionNo))return -1;
+
+    if(ParseDeviceName(namenode, name))return -1;
+    /*
     devices = NULL;
     device = NULL;
     
@@ -136,9 +165,9 @@ int ParseDescriptions(xmlNode *descriptions){
             if(ParseDeviceRxPDO(node))return -1;
         } else if(strcmp(node->name, expectedTxPDOElementName) == 0) {
             if(ParseDeviceTxPDO(node))return -1;
-        }*/
+        }
     }
-
+    */
     return 0;
 }
 

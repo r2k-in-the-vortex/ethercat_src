@@ -1,5 +1,6 @@
 add_executable(${PROJECT_NAME} main.c)
 
+set(CMAKE_BUILD_TYPE Debug)
 
 add_subdirectory(parser)
 add_subdirectory(xml_conf_parser)
