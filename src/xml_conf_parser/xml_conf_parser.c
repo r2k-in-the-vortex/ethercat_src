@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "libxml/parser.h"
+#include "xml_conf_parser.h"
 
 /****************************************************************************/
 /****************************************************************************/
@@ -36,7 +37,7 @@ int countNodesNamed(xmlNode *start, char *name){
     xmlNode *node;
     int count = 0;
     for (node = start; node; node = node->next){
-        if (node->name == NULL)return NULL;
+        if (node->name == NULL)return 0;
         if(strcmp(node->name, name) == 0){
             count++;
         }
@@ -112,7 +113,7 @@ int ParseDeviceName(xmlNode *namenode, char *name){
     return 0;
 }
 int ParsePdo(xmlNode *node){
-    char *nodename, *sm, *fixed, *mandatory, *index, *name, *entryindex, *subindex, *bitlen, *entryname, *datatype;
+    const char *nodename, *sm, *fixed, *mandatory, *index, *name, *entryindex, *subindex, *bitlen, *entryname, *datatype;
     xmlNode *entry;
     nodename = node->name;
     sm = getAttributeValueNamed(node, "Sm");
