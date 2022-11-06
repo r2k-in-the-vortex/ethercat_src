@@ -20,6 +20,7 @@
 #include <string.h>
 #include "libxml/parser.h"
 #include "xml_conf_parser.h"
+#include "log.h"
 
 /****************************************************************************/
 /****************************************************************************/
@@ -90,26 +91,26 @@ int getVendorId(xmlNode *slaveinfo, long *vendorid){
 
 int ParseDeviceType(xmlNode *typedata, char *producttype, char *productcode, char *revisionNo){
     if(typedata == NULL){
-        fprintf(stdout, "\t Typenode NULL\n");
+        log_error("Typenode NULL");
         return -1;
     }
     productcode = getAttributeValueNamed(typedata, "ProductCode");
     revisionNo = getAttributeValueNamed(typedata, "RevisionNo");
     producttype = getNodeTextContent(typedata);
-    fprintf(stdout, "\t %s product code %s, rev %s\n", producttype, productcode, revisionNo);
+    log_trace("%s product code %s, rev %s", producttype, productcode, revisionNo);
     return 0;
 }
 int ParseDeviceName(xmlNode *namenode, char *name){
     if(namenode == NULL){
-        fprintf(stdout, "\t name node not found\n");
+        log_error("name node not found");
         return -1;
     }
     name = namenode->children->content;
     if(name == NULL){
-        fprintf(stdout, "\t no name parsed\n");
+        log_error("no name parsed");
         return -1;
     }
-    fprintf(stdout, "\t %s\n", name);
+    log_trace("%s", name);
     return 0;
 }
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
@@ -126,7 +127,7 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
     pdo->bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
     pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
     pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
-    fprintf(stdout, "\t %s %s %s %s %s %s %s %s %s %s %s \n", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
+    log_trace("%s %s %s %s %s %s %s %s %s %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
 
@@ -135,7 +136,7 @@ int ParseDescriptions(xmlNode *descriptions){
     char *producttype, *productcode, *revisionNo, *name;
 
     // parse
-    fprintf(stdout, "\t parsing descriptions\n");
+    log_trace("parsing descriptions");
     // <Descriptions><Devices><Device>the good stuff inside here</Device></Devices></Descriptions>
     // one element of devices, inside one device, any deviation from that is not implemented
     char expectedTypeElementName[] = "Type"; 
@@ -153,13 +154,13 @@ int ParseDescriptions(xmlNode *descriptions){
     if(ParseDeviceName(namenode, name))return -1;
     int RxPdoCount = countNodesNamed(device->children, "RxPdo");
     int TxPdoCount = countNodesNamed(device->children, "TxPdo");
-    fprintf(stdout, "\t RxPdos %i | TxPdos %i\n", RxPdoCount, TxPdoCount);
+    log_trace("RxPdos %i | TxPdos %i", RxPdoCount, TxPdoCount);
 
     EcatPdo *RxPdos, *TxPdos;
     RxPdos = (EcatPdo*) malloc(RxPdoCount * sizeof(EcatPdo));
     TxPdos = (EcatPdo*) malloc(TxPdoCount * sizeof(EcatPdo));
     if (RxPdos == NULL || TxPdos == NULL){
-        fprintf(stdout, "\t failed to alloc\n");
+        log_error("failed to alloc");
         return -1;
     }
     start = device->children;
@@ -181,15 +182,15 @@ int ParseDescriptions(xmlNode *descriptions){
 }
 
 int ParseSlave(xmlNode *slaveinfo){
-    fprintf(stdout, "\t parsing slave %s\n", slaveinfo->name);
+    log_trace("parsing slave %s", slaveinfo->name);
     xmlNode *first_child, *node;
     long vendorid;
 
     if(getVendorId(slaveinfo, &vendorid) != 0){
-        fprintf(stdout, "\t failed to get vendor id %ld\n", vendorid);
+        log_error("failed to get vendor id %ld", vendorid);
         return -1;
     }
-    fprintf(stdout, "\t vendor id %ld\n", vendorid);
+    log_trace("vendor id %ld", vendorid);
 
     char expectedDescriptionsElementName[] = "Descriptions"; 
 
@@ -205,7 +206,7 @@ int ParseSlave(xmlNode *slaveinfo){
 }
 /****************************************************************************/
 int parse_xml_config(char *filename){
-    printf("parsing file %s\n", filename);
+    log_trace("parsing file %s", filename);
     
     xmlDoc         *document;
     xmlNode        *root, *first_child, *node;
@@ -216,23 +217,21 @@ int parse_xml_config(char *filename){
     char expectedRootName[] = "EtherCATInfoList"; 
     char expectedSlaveName[] = "EtherCATInfo"; 
 
-    fprintf(stdout, "Root is <%s> (%i)\n", root->name, root->type);
+    log_trace("Root is <%s> (%i)", root->name, root->type);
     if(strcmp(root->name, expectedRootName) != 0){
-        fprintf(stdout, "Invalid configuration file, expected root name %s but got %s\n", expectedRootName, root->name);
+        log_error("Invalid configuration file, expected root name %s but got %s", expectedRootName, root->name);
         return -1;
     }
 
     first_child = root->children;
     for (node = first_child; node; node = node->next) {
-        
         if(strcmp(node->name, expectedSlaveName) == 0){
             if(ParseSlave(node)){
-                // failed to parse slave
+                log_error("Failed to parse slave");
                 return -1;
             }
         }
     }
-    fprintf(stdout, "...\n");
     
     return 0;
 }

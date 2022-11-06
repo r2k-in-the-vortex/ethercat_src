@@ -44,4 +44,4 @@ jobs:
 
     - name: test
       # testrun
-      run: ./build/bin/ecat_test --filename conf/master_config.xml
+      run: ./build/bin/ecat_test --filename conf/master_config.xml -v

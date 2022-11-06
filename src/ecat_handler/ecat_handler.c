@@ -19,10 +19,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ecrt.h>
+#include "log.h"
 
 int EtherCATinit(){
     unsigned int ver = ecrt_version_magic();
-    fprintf(stdout, "\t ecrt_version_magic %u\n", ver);
+    log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
     return 0;
 }
 int EtherCATcyclic(){

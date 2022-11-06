@@ -29,4 +29,7 @@ target_link_directories(${LIB_NAME} PUBLIC
   /usr/local/src/ethercat/lib
   /usr/local/lib
   )
-target_link_libraries (${LIB_NAME} ${LINK_LIBS} )
+target_link_libraries (${LIB_NAME} 
+  ${LINK_LIBS} 
+  log
+  )

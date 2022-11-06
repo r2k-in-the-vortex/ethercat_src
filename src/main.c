@@ -20,6 +20,7 @@
 #include "cmdline.h"
 #include "xml_conf_parser.h"
 #include "ecat_handler.h"
+#include "log.h"
 /****************************************************************************/
 
 int main(int argc, char **argv)
@@ -29,10 +30,17 @@ int main(int argc, char **argv)
     if (cmdline_parser(argc, argv, &ai) != 0) {
         exit(1);
     }
-    printf("ai.filename_arg: %s\n", ai.filename_arg);
-    printf("ai.verbose_flag: %d\n", ai.verbose_flag);
+    log_set_level(1);
+    // set verbose output DEBUG
+    if(ai.verbose_flag){
+        log_trace("TRACE output");
+        log_set_level(0);
+    }
+
+    log_trace("ai.filename_arg: %s", ai.filename_arg);
+    log_trace("ai.verbose_flag: %d", ai.verbose_flag);
     if (!ai.index_given)ai.index_arg = 0;
-    printf("ai.index_arg: %d\n", ai.index_arg);
+    log_trace("ai.index_arg: %d", ai.index_arg);
     
     parse_xml_config(ai.filename_arg);
 
