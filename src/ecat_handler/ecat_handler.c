@@ -17,30 +17,14 @@
 /****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include "cmdline.h"
-#include "xml_conf_parser.h"
-#include "ecat_handler.h"
-/****************************************************************************/
+#include <string.h>
+#include <ecrt.h>
 
-int main(int argc, char **argv)
-{
-    int ret = 0;
-    struct gengetopt_args_info ai;
-    if (cmdline_parser(argc, argv, &ai) != 0) {
-        exit(1);
-    }
-    printf("ai.filename_arg: %s\n", ai.filename_arg);
-    printf("ai.verbose_flag: %d\n", ai.verbose_flag);
-    if (!ai.index_given)ai.index_arg = 0;
-    printf("ai.index_arg: %d\n", ai.index_arg);
-    
-    parse_xml_config(ai.filename_arg);
-
-    EtherCATinit();
-
-    EtherCATcyclic();
-
-    return ret;
+int EtherCATinit(){
+    unsigned int ver = ecrt_version_magic();
+    fprintf(stdout, "\t ecrt_version_magic %u\n", ver);
+    return 0;
 }
-
-/****************************************************************************/
+int EtherCATcyclic(){
+    return 0;
+}
