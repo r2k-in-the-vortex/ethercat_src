@@ -18,8 +18,10 @@ jobs:
     - name: Check submodules
       run: ls ${{github.workspace}}/external/ethercat
     - name: Bootstrap ethercat
+      shell: bash
       run: .${{github.workspace}}/external/ethercat/bootstrap
     - name: configure ethercat
+      shell: bash
       run: .${{github.workspace}}/external/ethercat/configure --sysconfdir=/etc --enable-8139too=no --enable-kernel=no
     - name: make ethercat
       run: make -C external/ethercat/
