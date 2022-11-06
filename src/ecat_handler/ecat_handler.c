@@ -20,12 +20,30 @@
 #include <string.h>
 #include <ecrt.h>
 #include "log.h"
+#include "ecat_handler.h"
 
-int EtherCATinit(){
+/****************************************************************************/
+static ec_master_t *master_ = NULL;
+/****************************************************************************/
+int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
     log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
+
+    master_ = ecrt_request_master(config->master_index);
+    if (!master_){
+        log_error("Didn't load /dev/EtherCAT%i, unable to continue", config->master_index);
+        log_error("Try 'sudo ethercat master' to verify etherlabs installation is working");
+        return -1;
+    }
+
     return 0;
+    
+out_release_master:
+	log_error("Releasing master");
+	ecrt_release_master(master_);
+    return -1;
 }
+/****************************************************************************/
 int EtherCATcyclic(){
     return 0;
 }

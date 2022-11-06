@@ -41,10 +41,13 @@ int main(int argc, char **argv)
     log_trace("ai.verbose_flag: %d", ai.verbose_flag);
     if (!ai.index_given)ai.index_arg = 0;
     log_trace("ai.index_arg: %d", ai.index_arg);
+
+    EcatConfig config;
+    config.master_index = ai.index_arg;
     
     parse_xml_config(ai.filename_arg);
 
-    EtherCATinit();
+    EtherCATinit(&config);
 
     EtherCATcyclic();
 
