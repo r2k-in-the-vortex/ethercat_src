@@ -47,6 +47,12 @@ static ec_master_state_t master_state = {};
 static ec_domain_t *domain1 = NULL;
 static ec_domain_state_t domain1_state = {};
 
+// process data
+static uint8_t *domain1_pd = NULL;
+
+
+/****************************************************************************/
+int ConfigureSlave();
 /****************************************************************************/
 int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
@@ -61,14 +67,37 @@ int EtherCATinit(EcatConfig *config){
     log_trace("/dev/EtherCAT%i open", config->master_index);
 
     // support for multiple domains in future?
-    log_trace("Creating domain");
     domain1 = ecrt_master_create_domain(master);
     if (!domain1) {
         log_error("Failed to create domain");
         goto out_release_master;
     }
+    log_trace("Domain created");
+
+    // configure slaves
+    for (int i = 0; i < config->slave_count; i++) {
+
+        ;
+        // to be implemented
+    }
 
 
+    log_trace("Activating master...");
+    if (ecrt_master_activate(master)) {
+        log_trace("Failed to activate master");
+        goto out_release_master;
+    }
+
+
+    log_trace("Process data memory...");
+    if (!(domain1_pd = ecrt_domain_data(domain1))) {
+        log_trace("Failed to get Process data memory");
+        goto out_release_master;
+    }
+
+
+
+    log_trace("/dev/EtherCAT%i set up, ready to start cyclic", config->master_index);
     return 0;
     
 out_release_master:
