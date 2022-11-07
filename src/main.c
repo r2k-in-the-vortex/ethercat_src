@@ -39,13 +39,18 @@ int main(int argc, char **argv)
 
     log_trace("ai.filename_arg: %s", ai.filename_arg);
     log_trace("ai.verbose_flag: %d", ai.verbose_flag);
+    log_trace("ai.confonly_flag: %d", ai.confonly_flag);
     if (!ai.index_given)ai.index_arg = 0;
     log_trace("ai.index_arg: %d", ai.index_arg);
 
     EcatConfig config;
     config.master_index = ai.index_arg;
+    config.config_only_flag = ai.confonly_flag;
     
-    parse_xml_config(ai.filename_arg, &config);
+    if(parse_xml_config(ai.filename_arg, &config)){
+        log_error("failed to parse configuration file");
+        return -1;
+    }
 
     EtherCATinit(&config);
 

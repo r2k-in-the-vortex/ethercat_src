@@ -42,6 +42,6 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build
     #can't test without configured /dev/EtherCAT0 from here on
-    #- name: test
-    #  # testrun
-    #  run: ./build/bin/ecat_test --filename conf/master_config.xml -v
+    - name: test
+      # testrun
+      run: ./build/bin/ecat_test --filename conf/master_config.xml -v -c
