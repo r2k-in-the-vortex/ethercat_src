@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     EcatConfig config;
     config.master_index = ai.index_arg;
     
-    parse_xml_config(ai.filename_arg);
+    parse_xml_config(ai.filename_arg, &config);
 
     EtherCATinit(&config);
 
