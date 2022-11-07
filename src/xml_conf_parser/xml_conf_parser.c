@@ -21,6 +21,7 @@
 #include "libxml/parser.h"
 #include "xml_conf_parser.h"
 #include "log.h"
+#include "ecat_handler.h"
 
 /****************************************************************************/
 /****************************************************************************/
@@ -181,7 +182,7 @@ int ParseDescriptions(xmlNode *descriptions){
     return 0;
 }
 
-int ParseSlave(xmlNode *slaveinfo){
+int ParseSlave(xmlNode *slaveinfo, SlaveConfig *config){
     log_trace("parsing slave %s", slaveinfo->name);
     xmlNode *first_child, *node;
     long vendorid;
@@ -205,7 +206,7 @@ int ParseSlave(xmlNode *slaveinfo){
     return 0;
 }
 /****************************************************************************/
-int parse_xml_config(char *filename){
+int parse_xml_config(char *filename, EcatConfig *config){
     log_trace("parsing file %s", filename);
     
     xmlDoc         *document;
@@ -224,12 +225,28 @@ int parse_xml_config(char *filename){
     }
 
     first_child = root->children;
+
+    config->slave_count = countNodesNamed(first_child, expectedSlaveName);
+    
+    
+    //SlaveConfig *slavesConfig;
+    //slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    //config->slavesConfig = slavesConfig;
+    if (config->slavesConfig == NULL){
+        log_error("failed to alloc");
+        return -1;
+    }
+
+    int slaveindex = 0;
     for (node = first_child; node; node = node->next) {
         if(strcmp(node->name, expectedSlaveName) == 0){
-            if(ParseSlave(node)){
+            /*
+            if(ParseSlave(node, &slavesConfig[slaveindex])){
                 log_error("Failed to parse slave");
                 return -1;
             }
+            */
+            slaveindex++;
         }
     }
     
