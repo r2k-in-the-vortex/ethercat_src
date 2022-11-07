@@ -47,8 +47,8 @@ static ec_master_state_t master_state = {};
 static ec_domain_t *domain1 = NULL;
 static ec_domain_state_t domain1_state = {};
 
-static ec_slave_config_t *sc_slaves = NULL;
-static ec_slave_config_state_t* sc_salves_states = NULL;
+static ec_slave_config_t **sc_slaves = NULL;
+static ec_slave_config_state_t **sc_salves_states = NULL;
 
 
 // process data
@@ -56,7 +56,16 @@ static uint8_t *domain1_pd = NULL;
 
 
 /****************************************************************************/
-int ConfigureSlave();
+int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc){
+    if (!config->config_only_flag){
+        sc = ecrt_master_slave_config(master, slave->alias, slave->position, slave->vendor_id, slave->product_code);
+        if (!sc){
+            log_error("Failed to get slave configuration");
+            return -1;
+        }
+    }
+    return 0;
+}
 /****************************************************************************/
 int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
@@ -81,19 +90,23 @@ int EtherCATinit(EcatConfig *config){
         }
     }
     log_trace("Domain created");
-
-    // knowning config->slave_count need to allocate memory for
-    //static ec_slave_config_t *sc_slaves = NULL;
-    //static ec_slave_config_state_t* sc_salves_states = NULL;
+    
+    sc_slaves = (ec_slave_config_t**) malloc(config->slave_count * sizeof(ec_slave_config_t*));
+    sc_salves_states = (ec_slave_config_state_t**) malloc(config->slave_count * sizeof(ec_slave_config_state_t*));
+    if (sc_slaves == NULL || sc_salves_states == NULL){
+        log_error("Failed to alloc");
+        goto out_release_master;
+    }
 
     // configure slaves
     log_trace("Slave n type alias|position vendor_id product_code");
     for (int i = 0; i < config->slave_count; i++) {
-        SlaveConfig slave = config->slavesConfig[i];
-        log_trace("Slave %i %s %i|%i %i 0x%08X", i, slave.type, slave.alias, slave.position, slave.vendor_id, slave.product_code);
-        if (!config->config_only_flag){
-            ec_slave_config_t *ecconf = ecrt_master_slave_config(master, slave.alias, slave.position, slave.vendor_id, slave.product_code);
-            // ecconf has to go to static, for state checking in cyclic
+        SlaveConfig *slave = &config->slavesConfig[i];
+        slave->position = i;
+        log_trace("Slave %i %s %i|%i %i 0x%08X", i, slave->type, slave->alias, slave->position, slave->vendor_id, slave->product_code);
+        if (ConfigureSlave(config, slave, sc_slaves[i])){
+            log_error("Failed to configure slave");
+            goto out_release_master;
         }
     }
 
