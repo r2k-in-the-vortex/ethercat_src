@@ -79,12 +79,13 @@ int EtherCATinit(EcatConfig *config){
     log_trace("Domain created");
 
     // configure slaves
+    log_trace("Slave n type alias|position vendor_id product_code");
     for (int i = 0; i < config->slave_count; i++) {
-        log_trace("Slave %i %s", i, config->slavesConfig[i].type);
-        //log_trace("rev %08X", config->slavesConfig[i].product_revision);
-        //ecrt_master_slave_config()
-        ;
-        // to be implemented
+        SlaveConfig slave = config->slavesConfig[i];
+        log_trace("Slave %i %s %i|%i %i 0x%08X", i, slave.type, slave.alias, slave.position, slave.vendor_id, slave.product_code);
+        if (!config->config_only_flag){
+            ec_slave_config_t *ecconf = ecrt_master_slave_config(master, slave.alias, slave.position, slave.vendor_id, slave.product_code);
+        }
     }
 
 
