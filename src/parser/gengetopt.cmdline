@@ -3,6 +3,7 @@ package "ec_test"
 purpose "parse EtherCAT configuration xml and start EtherCAT master"
 
 # Options
-option "filename" f "Input filename" string required
+option "filename" f "Input xml filename" string required
+option "confonly" c "Will not run device, for CI" flag off
 option "verbose" v "Increase program verbosity" flag off
 option "index" i "EtherCAT device index" default="0" int optional 

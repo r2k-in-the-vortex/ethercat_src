@@ -99,7 +99,7 @@ int getVendorId(xmlNode *slaveinfo, uint32_t *vendorid){
     return -1;
 }
 
-int ParseDeviceType(xmlNode *typedata, char *producttype, uint32_t productcode, uint32_t revisionNo){
+int ParseDeviceType(xmlNode *typedata, SlaveConfig *config){
     if(typedata == NULL){
         log_error("Typenode NULL");
         return -1;
@@ -107,11 +107,11 @@ int ParseDeviceType(xmlNode *typedata, char *producttype, uint32_t productcode, 
     char *strproductcode = getAttributeValueNamed(typedata, "ProductCode");
     char *strrevisionNo = getAttributeValueNamed(typedata, "RevisionNo");
 
-    productcode = hexstrtoint32(strproductcode);
-    revisionNo = hexstrtoint32(strrevisionNo);
+    config->product_code = hexstrtoint32(strproductcode);
+    config->product_revision = hexstrtoint32(strrevisionNo);
 
-    producttype = getNodeTextContent(typedata);
-    log_trace("%s product code 0x%08X, rev 0x%08X", producttype, productcode, revisionNo);
+    config->type = getNodeTextContent(typedata);
+    log_trace("%s product code 0x%08X, rev 0x%08X", config->type, config->product_code, config->product_revision);
     return 0;
 }
 
@@ -161,7 +161,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
     xmlNode *typenode = getSingularnodeNamed(device->children, "Type");
     xmlNode *namenode = getSingularnodeNamed(device->children, "Name");
 
-    if(ParseDeviceType(typenode, config->type, config->product_code, config->product_revision))return -1;
+    if(ParseDeviceType(typenode, config))return -1;
 
     log_trace("code  %8X | rev %8X", config->product_code, config->product_revision);
 
@@ -242,8 +242,10 @@ int parse_xml_config(char *filename, EcatConfig *config){
     config->slave_count = countNodesNamed(first_child, expectedSlaveName);
     
     
-    SlaveConfig *slavesConfig;
-    slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    SlaveConfig *slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    //slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    uint32_t *test = &slavesConfig[0].product_revision;
+
     config->slavesConfig = slavesConfig;
     if (config->slavesConfig == NULL){
         log_error("failed to alloc");
@@ -253,10 +255,12 @@ int parse_xml_config(char *filename, EcatConfig *config){
     int slaveindex = 0;
     for (node = first_child; node; node = node->next) {
         if(strcmp(node->name, expectedSlaveName) == 0){
-            if(ParseSlave(node, &slavesConfig[slaveindex])){
+            SlaveConfig conf;
+            if(ParseSlave(node, &conf)){
                 log_error("Failed to parse slave");
                 return -1;
             }
+            config->slavesConfig[slaveindex] = conf;
             slaveindex++;
         }
     }

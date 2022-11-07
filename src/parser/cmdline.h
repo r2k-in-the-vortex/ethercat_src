@@ -39,9 +39,11 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * filename_arg;	/**< @brief Input filename.  */
-  char * filename_orig;	/**< @brief Input filename original value given at command line.  */
-  const char *filename_help; /**< @brief Input filename help description.  */
+  char * filename_arg;	/**< @brief Input xml filename.  */
+  char * filename_orig;	/**< @brief Input xml filename original value given at command line.  */
+  const char *filename_help; /**< @brief Input xml filename help description.  */
+  int confonly_flag;	/**< @brief Will not run device, for CI (default=off).  */
+  const char *confonly_help; /**< @brief Will not run device, for CI help description.  */
   int verbose_flag;	/**< @brief Increase program verbosity (default=off).  */
   const char *verbose_help; /**< @brief Increase program verbosity help description.  */
   int index_arg;	/**< @brief EtherCAT device index (default='0').  */
@@ -51,6 +53,7 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int filename_given ;	/**< @brief Whether filename was given.  */
+  unsigned int confonly_given ;	/**< @brief Whether confonly was given.  */
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
   unsigned int index_given ;	/**< @brief Whether index was given.  */
 

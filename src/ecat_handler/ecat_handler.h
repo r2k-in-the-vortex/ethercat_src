@@ -30,6 +30,7 @@ struct _SlaveConfig{
 typedef struct _EcatConfig EcatConfig;
 typedef EcatConfig *EcatConfigPtr;
 struct _EcatConfig{
+    unsigned int            config_only_flag;               // if not 0 will only run through configuration without accessing device, for  and testing
     unsigned int            master_index;                   // EtherCAT master index, /dev/EtherCAT0 is 0, /dev/EtherCAT1 is 1 etc
     unsigned int            slave_count;                    // count of slaves
     struct _SlaveConfig     *slavesConfig;                  // configuration of slaves

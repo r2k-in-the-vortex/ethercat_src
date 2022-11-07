@@ -35,7 +35,8 @@ const char *gengetopt_args_info_description = "";
 const char *gengetopt_args_info_help[] = {
   "  -h, --help             Print help and exit",
   "  -V, --version          Print version and exit",
-  "  -f, --filename=STRING  Input filename",
+  "  -f, --filename=STRING  Input xml filename",
+  "  -c, --confonly         Will not run device, for CI  (default=off)",
   "  -v, --verbose          Increase program verbosity  (default=off)",
   "  -i, --index=INT        EtherCAT device index  (default=`0')",
     0
@@ -68,6 +69,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
   args_info->filename_given = 0 ;
+  args_info->confonly_given = 0 ;
   args_info->verbose_given = 0 ;
   args_info->index_given = 0 ;
 }
@@ -78,6 +80,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   FIX_UNUSED (args_info);
   args_info->filename_arg = NULL;
   args_info->filename_orig = NULL;
+  args_info->confonly_flag = 0;
   args_info->verbose_flag = 0;
   args_info->index_arg = 0;
   args_info->index_orig = NULL;
@@ -92,8 +95,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->filename_help = gengetopt_args_info_help[2] ;
-  args_info->verbose_help = gengetopt_args_info_help[3] ;
-  args_info->index_help = gengetopt_args_info_help[4] ;
+  args_info->confonly_help = gengetopt_args_info_help[3] ;
+  args_info->verbose_help = gengetopt_args_info_help[4] ;
+  args_info->index_help = gengetopt_args_info_help[5] ;
   
 }
 
@@ -222,6 +226,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "version", 0, 0 );
   if (args_info->filename_given)
     write_into_file(outfile, "filename", args_info->filename_orig, 0);
+  if (args_info->confonly_given)
+    write_into_file(outfile, "confonly", 0, 0 );
   if (args_info->verbose_given)
     write_into_file(outfile, "verbose", 0, 0 );
   if (args_info->index_given)
@@ -1114,6 +1120,7 @@ cmdline_parser_internal (
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "filename",	1, NULL, 'f' },
+        { "confonly",	0, NULL, 'c' },
         { "verbose",	0, NULL, 'v' },
         { "index",	1, NULL, 'i' },
         { 0,  0, 0, 0 }
@@ -1124,7 +1131,7 @@ cmdline_parser_internal (
       custom_opterr = opterr;
       custom_optopt = optopt;
 
-      c = custom_getopt_long (argc, argv, "hVf:vi:", long_options, &option_index);
+      c = custom_getopt_long (argc, argv, "hVf:cvi:", long_options, &option_index);
 
       optarg = custom_optarg;
       optind = custom_optind;
@@ -1145,7 +1152,7 @@ cmdline_parser_internal (
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'f':	/* Input filename.  */
+        case 'f':	/* Input xml filename.  */
         
         
           if (update_arg( (void *)&(args_info->filename_arg), 
@@ -1153,6 +1160,16 @@ cmdline_parser_internal (
               &(local_args_info.filename_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "filename", 'f',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Will not run device, for CI.  */
+        
+        
+          if (update_arg((void *)&(args_info->confonly_flag), 0, &(args_info->confonly_given),
+              &(local_args_info.confonly_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "confonly", 'c',
               additional_error))
             goto failure;
         

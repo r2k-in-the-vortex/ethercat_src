@@ -58,25 +58,30 @@ int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
     log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
 
-    master = ecrt_request_master(config->master_index);
-    if (!master){
-        log_error("Didn't load /dev/EtherCAT%i, unable to continue", config->master_index);
-        log_error("Try 'sudo ethercat master' to verify etherlabs installation is working");
-        return -1;
+    if (!config->config_only_flag){
+        master = ecrt_request_master(config->master_index);
+        if (!master){
+            log_error("Didn't load /dev/EtherCAT%i, unable to continue", config->master_index);
+            log_error("Try 'sudo ethercat master' to verify etherlabs installation is working");
+            return -1;
+        }
     }
     log_trace("/dev/EtherCAT%i open", config->master_index);
 
     // support for multiple domains in future?
-    domain1 = ecrt_master_create_domain(master);
-    if (!domain1) {
-        log_error("Failed to create domain");
-        goto out_release_master;
+    if (!config->config_only_flag){
+        domain1 = ecrt_master_create_domain(master);
+        if (!domain1) {
+            log_error("Failed to create domain");
+            goto out_release_master;
+        }
     }
     log_trace("Domain created");
 
     // configure slaves
     for (int i = 0; i < config->slave_count; i++) {
-        log_trace("Slave %i", i);
+        log_trace("Slave %i %s", i, config->slavesConfig[i].type);
+        //log_trace("rev %08X", config->slavesConfig[i].product_revision);
         //ecrt_master_slave_config()
         ;
         // to be implemented
@@ -84,26 +89,26 @@ int EtherCATinit(EcatConfig *config){
 
 
     log_trace("Activating master...");
-    if (ecrt_master_activate(master)) {
-        log_trace("Failed to activate master");
-        goto out_release_master;
+    if (!config->config_only_flag){
+        if (ecrt_master_activate(master)) {
+            log_trace("Failed to activate master");
+            goto out_release_master;
+        }
+        log_trace("Process data memory...");
+        if (!(domain1_pd = ecrt_domain_data(domain1))) {
+            log_trace("Failed to get Process data memory");
+            goto out_release_master;
+        }
     }
-
-
-    log_trace("Process data memory...");
-    if (!(domain1_pd = ecrt_domain_data(domain1))) {
-        log_trace("Failed to get Process data memory");
-        goto out_release_master;
-    }
-
-
 
     log_trace("/dev/EtherCAT%i set up, ready to start cyclic", config->master_index);
     return 0;
     
 out_release_master:
-	log_error("Releasing master");
-	ecrt_release_master(master);
+    if (!config->config_only_flag){
+        log_error("Releasing master");
+        ecrt_release_master(master);
+    }
     return -1;
 }
 /****************************************************************************/
