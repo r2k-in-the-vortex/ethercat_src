@@ -163,7 +163,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
 
     if(ParseDeviceType(typenode, config))return -1;
 
-    log_trace("code  %8X | rev %8X", config->product_code, config->product_revision);
+    log_trace("code  0x%08X | rev 0x%08X", config->product_code, config->product_revision);
 
     if(ParseDeviceName(namenode, name))return -1;
     int RxPdoCount = countNodesNamed(device->children, "RxPdo");
