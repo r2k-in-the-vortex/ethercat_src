@@ -1,4 +1,4 @@
-
+#pragma once
 /**
  * Ethercat slave config data:
  *
