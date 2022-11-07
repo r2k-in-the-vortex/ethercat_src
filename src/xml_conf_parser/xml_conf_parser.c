@@ -76,9 +76,18 @@ char * getAttributeValueNamed(xmlNode *element, char *name){
     }
     return NULL;
 }
+uint32_t hexstrtoint32(char *str){
+    //log_trace("converting %s", str);
+    if (strlen(str) != 10){
+        log_error("invalid string '%s', expected 0xXXXXXXXX", str);
+        return 0;
+    }
+    char *pend;
+    return strtol(str+2, &pend, 16);
+}
 
 /****************************************************************************/
-int getVendorId(xmlNode *slaveinfo, long *vendorid){
+int getVendorId(xmlNode *slaveinfo, uint32_t *vendorid){
     char *ptr;
     xmlNode *vendornode = getSingularnodeNamed(slaveinfo->children, "Vendor");
     xmlNode *idnode = getSingularnodeNamed(vendornode->children, "Id");
@@ -90,17 +99,22 @@ int getVendorId(xmlNode *slaveinfo, long *vendorid){
     return -1;
 }
 
-int ParseDeviceType(xmlNode *typedata, char *producttype, char *productcode, char *revisionNo){
+int ParseDeviceType(xmlNode *typedata, char *producttype, uint32_t productcode, uint32_t revisionNo){
     if(typedata == NULL){
         log_error("Typenode NULL");
         return -1;
     }
-    productcode = getAttributeValueNamed(typedata, "ProductCode");
-    revisionNo = getAttributeValueNamed(typedata, "RevisionNo");
+    char *strproductcode = getAttributeValueNamed(typedata, "ProductCode");
+    char *strrevisionNo = getAttributeValueNamed(typedata, "RevisionNo");
+
+    productcode = hexstrtoint32(strproductcode);
+    revisionNo = hexstrtoint32(strrevisionNo);
+
     producttype = getNodeTextContent(typedata);
-    log_trace("%s product code %s, rev %s", producttype, productcode, revisionNo);
+    log_trace("%s product code 0x%08X, rev 0x%08X", producttype, productcode, revisionNo);
     return 0;
 }
+
 int ParseDeviceName(xmlNode *namenode, char *name){
     if(namenode == NULL){
         log_error("name node not found");
@@ -114,6 +128,7 @@ int ParseDeviceName(xmlNode *namenode, char *name){
     log_trace("%s", name);
     return 0;
 }
+
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
     xmlNode *entry;
     pdo->pdotype = node->name;
@@ -132,7 +147,7 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
     return 0;
 }
 
-int ParseDescriptions(xmlNode *descriptions){
+int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
     // data out
     char *producttype, *productcode, *revisionNo, *name;
 
@@ -140,18 +155,16 @@ int ParseDescriptions(xmlNode *descriptions){
     log_trace("parsing descriptions");
     // <Descriptions><Devices><Device>the good stuff inside here</Device></Devices></Descriptions>
     // one element of devices, inside one device, any deviation from that is not implemented
-    char expectedTypeElementName[] = "Type"; 
-    char expectedNameElementName[] = "Name"; 
-    char expectedSmElementName[] = "Sm"; 
-    char expectedRxPDOElementName[] = "RxPdo"; 
-    char expectedTxPDOElementName[] = "TxPdo"; 
     xmlNode *first_child, *node, *start;
     xmlNode *devices = getSingularnodeNamed(descriptions->children, "Devices");
     xmlNode *device = getSingularnodeNamed(devices->children, "Device");
     xmlNode *typenode = getSingularnodeNamed(device->children, "Type");
     xmlNode *namenode = getSingularnodeNamed(device->children, "Name");
 
-    if(ParseDeviceType(typenode, producttype, productcode, revisionNo))return -1;
+    if(ParseDeviceType(typenode, config->type, config->product_code, config->product_revision))return -1;
+
+    log_trace("code  %8X | rev %8X", config->product_code, config->product_revision);
+
     if(ParseDeviceName(namenode, name))return -1;
     int RxPdoCount = countNodesNamed(device->children, "RxPdo");
     int TxPdoCount = countNodesNamed(device->children, "TxPdo");
@@ -185,23 +198,23 @@ int ParseDescriptions(xmlNode *descriptions){
 int ParseSlave(xmlNode *slaveinfo, SlaveConfig *config){
     log_trace("parsing slave %s", slaveinfo->name);
     xmlNode *first_child, *node;
-    long vendorid;
+    uint32_t vendorid;
 
     if(getVendorId(slaveinfo, &vendorid) != 0){
         log_error("failed to get vendor id %ld", vendorid);
         return -1;
     }
     log_trace("vendor id %ld", vendorid);
+    config->vendor_id = vendorid;
 
     char expectedDescriptionsElementName[] = "Descriptions"; 
 
     first_child = slaveinfo->children;
     for (node = first_child; node; node = node->next){
         if(strcmp(node->name, expectedDescriptionsElementName) == 0) {
-            if(ParseDescriptions(node))return -1;
+            if(ParseDescriptions(node, config))return -1;
         }
     }
-    
 
     return 0;
 }
@@ -229,9 +242,9 @@ int parse_xml_config(char *filename, EcatConfig *config){
     config->slave_count = countNodesNamed(first_child, expectedSlaveName);
     
     
-    //SlaveConfig *slavesConfig;
-    //slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
-    //config->slavesConfig = slavesConfig;
+    SlaveConfig *slavesConfig;
+    slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    config->slavesConfig = slavesConfig;
     if (config->slavesConfig == NULL){
         log_error("failed to alloc");
         return -1;
@@ -240,12 +253,10 @@ int parse_xml_config(char *filename, EcatConfig *config){
     int slaveindex = 0;
     for (node = first_child; node; node = node->next) {
         if(strcmp(node->name, expectedSlaveName) == 0){
-            /*
             if(ParseSlave(node, &slavesConfig[slaveindex])){
                 log_error("Failed to parse slave");
                 return -1;
             }
-            */
             slaveindex++;
         }
     }

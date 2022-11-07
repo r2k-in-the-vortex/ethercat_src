@@ -76,7 +76,8 @@ int EtherCATinit(EcatConfig *config){
 
     // configure slaves
     for (int i = 0; i < config->slave_count; i++) {
-
+        log_trace("Slave %i", i);
+        //ecrt_master_slave_config()
         ;
         // to be implemented
     }
