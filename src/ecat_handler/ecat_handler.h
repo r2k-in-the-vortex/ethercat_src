@@ -3,6 +3,17 @@
 #include <stdint.h>
 
 /**
+ * For registering all read/write pdos and their links to PLC
+ *
+ */
+typedef struct _PdoRegistryEntry PdoRegistryEntry;
+typedef PdoRegistryEntry *PdoRegistryEntryPtr;
+struct _PdoRegistryEntry{
+    unsigned int        offset;                             // PDO entry's (byte-)offset in the process data.
+    unsigned int        bit_position;                       // bit position (0-7) within the \a offset
+};
+
+/**
  * EcatSm:
  *
  * Sync manager, https://infosys.beckhoff.com/content/1033/tc3_io_intro/1344982411.html?id=1069631237599749139
@@ -29,7 +40,7 @@ struct _EcatPdo{
     uint16_t            sm;                                 // sm index
     const char          *fixed;                             // fixed attr
     const char          *mandatory;                         // mandatory attr
-    uint16_t            index;                             // pdo index
+    uint16_t            index;                              // pdo index
     const char          *name;                              // pdo name
     uint16_t            entryindex;                         // entry index
     const char          *subindex;                          // entry subindex
@@ -78,6 +89,7 @@ struct _EcatConfig{
     unsigned int            slave_count;                    // count of slaves
     struct _SlaveConfig     *slavesConfig;                  // configuration of slaves
 };
+
 
 /* set up ethercat comms */
 int EtherCATinit(EcatConfig *config);

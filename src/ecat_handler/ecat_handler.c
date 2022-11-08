@@ -46,6 +46,12 @@ static ec_master_state_t        master_state        = {};
 
 static ec_domain_t              *domain1            = NULL;
 static ec_domain_state_t        domain1_state       = {};
+static PdoRegistryEntry         *RxPdoRegistry      = NULL;
+static PdoRegistryEntry         *TxPdoRegistry      = NULL;
+static ec_pdo_entry_reg_t       *domain1_regs       = NULL; 
+static int                      domain1_regs_idx    = 0; 
+static int                      RxPdoRegistry_idx   = 0; 
+static int                      TxPdoRegistry_idx   = 0; 
 
 static ec_slave_config_t        **sc_slaves         = NULL;
 static ec_slave_config_state_t  **sc_salves_states  = NULL;
@@ -62,6 +68,35 @@ static uint8_t *domain1_pd = NULL;
 
 
 /****************************************************************************/
+int RegisterRxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry){
+    domain1_regs[domain1_regs_idx].alias                  =       slave->alias;
+    domain1_regs[domain1_regs_idx].position               =       slave->position;
+    domain1_regs[domain1_regs_idx].vendor_id              =       slave->vendor_id;
+    domain1_regs[domain1_regs_idx].product_code           =       slave->product_code;
+    domain1_regs[domain1_regs_idx].index                  =       entry->index;
+    domain1_regs[domain1_regs_idx].subindex               =       entry->subindex;
+    domain1_regs[domain1_regs_idx].offset                 =       &RxPdoRegistry[RxPdoRegistry_idx].offset;
+    domain1_regs[domain1_regs_idx].bit_position           =       &RxPdoRegistry[RxPdoRegistry_idx].bit_position;
+
+    domain1_regs_idx++;
+    RxPdoRegistry_idx++;
+    return 0;
+}
+int RegisterTxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry){
+    domain1_regs[domain1_regs_idx].alias                  =       slave->alias;
+    domain1_regs[domain1_regs_idx].position               =       slave->position;
+    domain1_regs[domain1_regs_idx].vendor_id              =       slave->vendor_id;
+    domain1_regs[domain1_regs_idx].product_code           =       slave->product_code;
+    domain1_regs[domain1_regs_idx].index                  =       entry->index;
+    domain1_regs[domain1_regs_idx].subindex               =       entry->subindex;
+    domain1_regs[domain1_regs_idx].offset                 =       &TxPdoRegistry[TxPdoRegistry_idx].offset;
+    domain1_regs[domain1_regs_idx].bit_position           =       &TxPdoRegistry[TxPdoRegistry_idx].bit_position;
+
+    domain1_regs_idx++;
+    TxPdoRegistry_idx++;
+    return 0;
+}
+
 int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc){
     log_trace("Slave %s %i|%i %i 0x%08X", slave->type, slave->alias, slave->position, slave->vendor_id, slave->product_code);
     if (!config->config_only_flag){
@@ -103,6 +138,10 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         slave_syncs[rxpdo.sm].dir = EC_DIR_OUTPUT;
         slave_syncs[rxpdo.sm].n_pdos++;
         slave_syncs[rxpdo.sm].pdos = rx_pdos;
+        if(RegisterRxInDomain(slave, &rx_entries[i])){
+            log_error("Failed to register RxPDO in domain");
+            return -1;
+        }
     }
     
     // tx pdos
@@ -117,6 +156,10 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         slave_syncs[txpdo.sm].dir = EC_DIR_INPUT;
         slave_syncs[txpdo.sm].n_pdos++;
         slave_syncs[txpdo.sm].pdos = tx_pdos;
+        if(RegisterTxInDomain(slave, &tx_entries[i])){
+            log_error("Failed to register TxPDO in domain");
+            return -1;
+        }
     }
 
     for (int i = 0; i < slave->sm_count;i++){
@@ -133,7 +176,6 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
                 slave_syncs[i].pdos[j].entries[0].subindex, 
                 slave_syncs[i].pdos[j].entries[0].bit_length);
         }
-        log_trace("Slave done");
     }
 
     if (!config->config_only_flag){
@@ -143,6 +185,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
             return -1;
         }
     }
+    log_trace("Slave configured");
     return 0;
 }
 /****************************************************************************/
@@ -169,10 +212,25 @@ int EtherCATinit(EcatConfig *config){
         }
     }
     log_trace("Domain created");
+
+    // count registers
+    int rxregistry_count = 0;
+    int txregistry_count = 0;
+    for (int i = 0; i < config->slave_count; i++){
+        rxregistry_count += config->slavesConfig[i].RxPdo_count;
+        txregistry_count += config->slavesConfig[i].TxPdo_count;
+    }
+    domain1_regs = (ec_pdo_entry_reg_t*) malloc((rxregistry_count + txregistry_count) * sizeof(ec_pdo_entry_reg_t));
+    //static PdoRegistryEntry         *TxPdoRegistry      = NULL;
+    TxPdoRegistry = (PdoRegistryEntry*) malloc(txregistry_count * sizeof(PdoRegistryEntry));
+    TxPdoRegistry = (PdoRegistryEntry*) malloc(txregistry_count * sizeof(PdoRegistryEntry));
+
+    log_trace("Rx Registry count %i", rxregistry_count);
+    log_trace("Tx Registry count %i", txregistry_count);
     
     sc_slaves = (ec_slave_config_t**) malloc(config->slave_count * sizeof(ec_slave_config_t*));
     sc_salves_states = (ec_slave_config_state_t**) malloc(config->slave_count * sizeof(ec_slave_config_state_t*));
-    if (sc_slaves == NULL || sc_salves_states == NULL){
+    if (sc_slaves == NULL || sc_salves_states == NULL || domain1_regs == NULL){
         log_error("Failed to alloc");
         goto out_release_master;
     }
@@ -187,17 +245,25 @@ int EtherCATinit(EcatConfig *config){
             goto out_release_master;
         }
     }
+    log_trace("Slaves configured");
+
+    if (!config->config_only_flag){
+        if (ecrt_domain_reg_pdo_entry_list(domain1, domain1_regs)) {
+            log_error("PDO entry registration failed!");
+            return -1;
+        }
+    }
 
 
     log_trace("Activating master...");
     if (!config->config_only_flag){
         if (ecrt_master_activate(master)) {
-            log_trace("Failed to activate master");
+            log_error("Failed to activate master");
             goto out_release_master;
         }
         log_trace("Process data memory...");
         if (!(domain1_pd = ecrt_domain_data(domain1))) {
-            log_trace("Failed to get Process data memory");
+            log_error("Failed to get Process data memory");
             goto out_release_master;
         }
     }
