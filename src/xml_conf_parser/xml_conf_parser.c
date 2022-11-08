@@ -78,8 +78,8 @@ char * getAttributeValueNamed(xmlNode *element, char *name){
 }
 uint32_t hexstrtoint32(char *str){
     //log_trace("converting %s", str);
-    if (strlen(str) != 10){
-        log_error("invalid string '%s', expected 0xXXXXXXXX", str);
+    if (strlen(str) < 3){
+        log_error("invalid string '%s'", str);
         return 0;
     }
     char *pend;
@@ -129,6 +129,21 @@ int ParseDeviceName(xmlNode *namenode, char *name){
     return 0;
 }
 
+int ParseSm(xmlNode *node, EcatSm *sm){
+    char *ptr;
+    char *Enable        = getAttributeValueNamed(node, "Enable");
+    char *StartAddress  = getAttributeValueNamed(node, "StartAddress");
+    char *ControlByte   = getAttributeValueNamed(node, "ControlByte");
+    char *DefaultSize   = getAttributeValueNamed(node, "DefaultSize");
+
+    sm->Enable          = strtol(Enable, &ptr, 10);
+    sm->StartAddress    = hexstrtoint32(StartAddress);
+    sm->ControlByte     = hexstrtoint32(ControlByte);
+    sm->DefaultSize     = strtol(DefaultSize, &ptr, 10);
+
+    log_trace("Sm %i %i 0x%X 0x%X %i", sm->Index, sm->Enable, sm->StartAddress, sm->ControlByte, sm->DefaultSize);
+}
+
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
     xmlNode *entry;
     pdo->pdotype = node->name;
@@ -166,32 +181,51 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
     log_trace("code  0x%08X | rev 0x%08X", config->product_code, config->product_revision);
 
     if(ParseDeviceName(namenode, name))return -1;
-    int RxPdoCount = countNodesNamed(device->children, "RxPdo");
-    int TxPdoCount = countNodesNamed(device->children, "TxPdo");
-    log_trace("RxPdos %i | TxPdos %i", RxPdoCount, TxPdoCount);
+
+    // syncmanager count
+    config->sm_count = countNodesNamed(device->children, "Sm");
+    log_trace("Sm count %i", config->sm_count);
+    EcatSm *Sms;
+    Sms = (EcatSm*) malloc(config->sm_count * sizeof(EcatSm));
+    if (Sms == NULL){
+        log_error("failed to alloc");
+        return -1;
+    }
+    start = device->children;
+    for (int i = 0; i< config->sm_count;i++){
+        start = getNextNodeNamed(start, "Sm");
+        Sms[i].Index = i;
+        ParseSm(start, &Sms[i]);
+        start = start->next;
+    }
+
+    config->RxPdo_count = countNodesNamed(device->children, "RxPdo");
+    config->TxPdo_count = countNodesNamed(device->children, "TxPdo");
+    log_trace("RxPdos %i | TxPdos %i", config->RxPdo_count, config->TxPdo_count);
 
     EcatPdo *RxPdos, *TxPdos;
-    RxPdos = (EcatPdo*) malloc(RxPdoCount * sizeof(EcatPdo));
-    TxPdos = (EcatPdo*) malloc(TxPdoCount * sizeof(EcatPdo));
+    RxPdos = (EcatPdo*) malloc(config->RxPdo_count * sizeof(EcatPdo));
+    TxPdos = (EcatPdo*) malloc(config->TxPdo_count * sizeof(EcatPdo));
     if (RxPdos == NULL || TxPdos == NULL){
         log_error("failed to alloc");
         return -1;
     }
     start = device->children;
-    for (int i = 0; i< TxPdoCount;i++){
-        start = getNextNodeNamed(start, "TxPdo");
-        ParsePdo(start, &TxPdos[i]);
-        start = start->next;
-    }
-    start = device->children;
-    for (int i = 0; i< RxPdoCount;i++){
+    for (int i = 0; i< config->RxPdo_count;i++){
         start = getNextNodeNamed(start, "RxPdo");
         ParsePdo(start, &RxPdos[i]);
         start = start->next;
     }
+    start = device->children;
+    for (int i = 0; i< config->TxPdo_count;i++){
+        start = getNextNodeNamed(start, "TxPdo");
+        ParsePdo(start, &TxPdos[i]);
+        start = start->next;
+    }
 
-    free(RxPdos);
-    free(TxPdos);
+    config->Sm = Sms;
+    config->RxPDO = RxPdos;
+    config->TxPDO = TxPdos;
     return 0;
 }
 

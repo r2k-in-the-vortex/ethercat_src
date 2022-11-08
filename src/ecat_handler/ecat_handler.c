@@ -57,10 +57,41 @@ static uint8_t *domain1_pd = NULL;
 
 /****************************************************************************/
 int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc){
+    log_trace("Slave %s %i|%i %i 0x%08X", slave->type, slave->alias, slave->position, slave->vendor_id, slave->product_code);
     if (!config->config_only_flag){
         sc = ecrt_master_slave_config(master, slave->alias, slave->position, slave->vendor_id, slave->product_code);
         if (!sc){
             log_error("Failed to get slave configuration");
+            return -1;
+        }
+    }
+    // cofigure pdo-s
+    // Digital out ------------------------
+
+    static ec_pdo_entry_info_t el2004_channels[] = {
+        {0x3001, 1, 1}, // Value 1
+        {0x3001, 2, 1}, // Value 2
+        {0x3001, 3, 1}, // Value 3
+        {0x3001, 4, 1}  // Value 4
+    };
+
+    static ec_pdo_info_t el2004_pdos[] = {
+        {0x1600, 1, &el2004_channels[0]},
+        {0x1601, 1, &el2004_channels[1]},
+        {0x1602, 1, &el2004_channels[2]},
+        {0x1603, 1, &el2004_channels[3]}
+    };
+
+    static ec_sync_info_t el2004_syncs[] = {
+        {0, EC_DIR_OUTPUT, 4, el2004_pdos},
+        {1, EC_DIR_INPUT},
+        {0xff}
+    };
+
+    if (!config->config_only_flag){
+
+        if (ecrt_slave_config_pdos(sc, EC_END, el2004_syncs)){
+            log_error("Failed to configure PDO-s");
             return -1;
         }
     }
@@ -103,7 +134,6 @@ int EtherCATinit(EcatConfig *config){
     for (int i = 0; i < config->slave_count; i++) {
         SlaveConfig *slave = &config->slavesConfig[i];
         slave->position = i;
-        log_trace("Slave %i %s %i|%i %i 0x%08X", i, slave->type, slave->alias, slave->position, slave->vendor_id, slave->product_code);
         if (ConfigureSlave(config, slave, sc_slaves[i])){
             log_error("Failed to configure slave");
             goto out_release_master;
