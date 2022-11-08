@@ -88,9 +88,37 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         {0xff}
     };
 
+    ec_sync_info_t slave_syncs[slave->sm_count + 1];
+    ec_pdo_entry_info_t rx_entries[slave->RxPdo_count];
+    ec_pdo_info_t rx_pdos[slave->RxPdo_count];
+    ec_pdo_entry_info_t tx_entries[slave->TxPdo_count];
+    ec_pdo_info_t tx_pdos[slave->TxPdo_count];
+
+
+    slave_syncs[slave->sm_count] = (ec_sync_info_t){0xff};  // list termination
+    for (int i = 0;i < slave->sm_count;i++) slave_syncs[i].index = i;       // indexes
+
+    // rx pdos
+    for (int i = 0;i < slave->RxPdo_count;i++){
+        EcatPdo rxpdo = slave->RxPDO[i];
+        rx_entries[i].subindex = rxpdo.entryindex;
+        rx_entries[i].index = i;
+        rx_entries[i].bit_length = rxpdo.bitlen;
+        rx_pdos[i].entries = &rx_entries[i];
+        rx_pdos[i].index = rxpdo.index;
+        rx_pdos[i].n_entries = 1;
+        slave_syncs[rxpdo.sm].dir = EC_DIR_OUTPUT;
+        slave_syncs[rxpdo.sm].n_pdos++;
+    }
+
+    for (int i = 0;i < slave->sm_count;i++){
+        ;//slave->Sm[i];
+        //slave_syncs[i] = (ec_sync_info_t){{i, EC_DIR_OUTPUT, 4, el2004_pdos}};
+    }
+
     if (!config->config_only_flag){
 
-        if (ecrt_slave_config_pdos(sc, EC_END, el2004_syncs)){
+        if (ecrt_slave_config_pdos(sc, EC_END, slave_syncs)){
             log_error("Failed to configure PDO-s");
             return -1;
         }

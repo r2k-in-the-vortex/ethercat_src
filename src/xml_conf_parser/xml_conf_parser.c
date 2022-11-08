@@ -145,20 +145,25 @@ int ParseSm(xmlNode *node, EcatSm *sm){
 }
 
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
+    char *ptr;
     xmlNode *entry;
     pdo->pdotype = node->name;
-    pdo->sm = getAttributeValueNamed(node, "Sm");
+    char *sm = getAttributeValueNamed(node, "Sm");
+    pdo->sm = (uint16_t)strtol(sm, &ptr, 10);
     pdo->fixed = getAttributeValueNamed(node, "Fixed");
     pdo->mandatory = getAttributeValueNamed(node, "Mandatory");
-    pdo->index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
+    char *index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
+    pdo->index = (uint16_t)hexstrtoint32(index);
     pdo->name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
     entry = getSingularnodeNamed(node->children, "Entry");
-    pdo->entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
+    char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
+    pdo->entryindex = (uint16_t)hexstrtoint32(entryindex);
     pdo->subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
-    pdo->bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
+    char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
+    pdo->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
     pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
     pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
-    log_trace("%s %s %s %s %s %s %s %s %s %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
+    log_trace("%s %i %s %s 0x%X %s 0x%X 0x%X %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
 
