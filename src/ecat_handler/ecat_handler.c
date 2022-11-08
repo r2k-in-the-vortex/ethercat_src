@@ -72,27 +72,6 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         }
     }
     // cofigure pdo-s
-    // Digital out ------------------------
-
-    static ec_pdo_entry_info_t el2004_channels[] = {
-        {0x3001, 1, 1}, // Value 1
-        {0x3001, 2, 1}, // Value 2
-        {0x3001, 3, 1}, // Value 3
-        {0x3001, 4, 1}  // Value 4
-    };
-
-    static ec_pdo_info_t el2004_pdos[] = {
-        {0x1600, 1, &el2004_channels[0]},
-        {0x1601, 1, &el2004_channels[1]},
-        {0x1602, 1, &el2004_channels[2]},
-        {0x1603, 1, &el2004_channels[3]}
-    };
-
-    static ec_sync_info_t el2004_syncs[] = {
-        {0, EC_DIR_OUTPUT, 4, el2004_pdos},
-        {1, EC_DIR_INPUT},
-        {0xff}
-    };
 
     //ec_sync_info_t slave_syncs[slave->sm_count + 1];
     slave_syncs = (ec_sync_info_t*) malloc((slave->sm_count + 1) * sizeof(ec_sync_info_t));
@@ -107,13 +86,16 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
 
 
     slave_syncs[slave->sm_count] = (ec_sync_info_t){0xff};  // list termination
-    for (int i = 0;i < slave->sm_count;i++) slave_syncs[i].index = i;       // indexes
+    for (int i = 0;i < slave->sm_count;i++) {
+        slave_syncs[i].index    = i;       // indexes
+        slave_syncs[i].n_pdos   = 0;       // to be counted
+    }
 
     // rx pdos
     for (int i = 0;i < slave->RxPdo_count;i++){
         EcatPdo rxpdo = slave->RxPDO[i];
-        rx_entries[i].subindex = rxpdo.entryindex;
-        rx_entries[i].index = i;
+        rx_entries[i].subindex = i + 1;
+        rx_entries[i].index = rxpdo.entryindex;
         rx_entries[i].bit_length = rxpdo.bitlen;
         rx_pdos[i].entries = &rx_entries[i];
         rx_pdos[i].index = rxpdo.index;
@@ -126,15 +108,32 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     // tx pdos
     for (int i = 0;i < slave->TxPdo_count;i++){
         EcatPdo txpdo = slave->TxPDO[i];
-        tx_entries[i].subindex = txpdo.entryindex;
-        tx_entries[i].index = i;
+        tx_entries[i].subindex = i + 1;
+        tx_entries[i].index = txpdo.entryindex;
         tx_entries[i].bit_length = txpdo.bitlen;
-        tx_pdos[i].entries = &rx_entries[i];
+        tx_pdos[i].entries = &tx_entries[i];
         tx_pdos[i].index = txpdo.index;
         tx_pdos[i].n_entries = 1;
         slave_syncs[txpdo.sm].dir = EC_DIR_INPUT;
         slave_syncs[txpdo.sm].n_pdos++;
         slave_syncs[txpdo.sm].pdos = tx_pdos;
+    }
+
+    for (int i = 0; i < slave->sm_count;i++){
+        char *dir = "[error invalid direction]";
+        if (slave_syncs[i].dir == EC_DIR_INPUT)dir = "EC_DIR_INPUT";
+        if (slave_syncs[i].dir == EC_DIR_OUTPUT)dir = "EC_DIR_OUTPUT";
+        log_trace("Sync master %i %s", i, dir);
+        for (int j = 0; j < slave_syncs[i].n_pdos; j++){
+            log_trace("PDO index %i/%i  0x%4X entryindex 0x%4X subindex %i bitlen %i", 
+                j + 1,
+                slave_syncs[i].n_pdos,
+                slave_syncs[i].pdos[j].index, 
+                slave_syncs[i].pdos[j].entries[0].index, 
+                slave_syncs[i].pdos[j].entries[0].subindex, 
+                slave_syncs[i].pdos[j].entries[0].bit_length);
+        }
+        log_trace("Slave done");
     }
 
     if (!config->config_only_flag){
