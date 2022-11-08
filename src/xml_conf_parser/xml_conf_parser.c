@@ -163,7 +163,7 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
     pdo->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
     pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
     pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
-    log_trace("%s %i %s %s 0x%X %s 0x%X 0x%X %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
+    log_trace("%s %i %s %s 0x%X %s 0x%X %s %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
 

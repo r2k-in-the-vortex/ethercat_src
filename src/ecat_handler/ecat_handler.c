@@ -41,14 +41,20 @@
 /****************************************************************************/
 
 // EtherCAT
-static ec_master_t *master = NULL;
-static ec_master_state_t master_state = {};
+static ec_master_t              *master             = NULL;
+static ec_master_state_t        master_state        = {};
 
-static ec_domain_t *domain1 = NULL;
-static ec_domain_state_t domain1_state = {};
+static ec_domain_t              *domain1            = NULL;
+static ec_domain_state_t        domain1_state       = {};
 
-static ec_slave_config_t **sc_slaves = NULL;
-static ec_slave_config_state_t **sc_salves_states = NULL;
+static ec_slave_config_t        **sc_slaves         = NULL;
+static ec_slave_config_state_t  **sc_salves_states  = NULL;
+
+static ec_sync_info_t           *slave_syncs        = NULL;
+static ec_pdo_entry_info_t      *rx_entries         = NULL;
+static ec_pdo_info_t            *rx_pdos            = NULL;
+static ec_pdo_entry_info_t      *tx_entries         = NULL;
+static ec_pdo_info_t            *tx_pdos            = NULL;
 
 
 // process data
@@ -88,11 +94,16 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         {0xff}
     };
 
-    ec_sync_info_t slave_syncs[slave->sm_count + 1];
-    ec_pdo_entry_info_t rx_entries[slave->RxPdo_count];
-    ec_pdo_info_t rx_pdos[slave->RxPdo_count];
-    ec_pdo_entry_info_t tx_entries[slave->TxPdo_count];
-    ec_pdo_info_t tx_pdos[slave->TxPdo_count];
+    //ec_sync_info_t slave_syncs[slave->sm_count + 1];
+    slave_syncs = (ec_sync_info_t*) malloc((slave->sm_count + 1) * sizeof(ec_sync_info_t));
+    //ec_pdo_entry_info_t rx_entries[slave->RxPdo_count];
+    rx_entries = (ec_pdo_entry_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_entry_info_t));
+    //ec_pdo_info_t rx_pdos[slave->RxPdo_count];
+    rx_pdos = (ec_pdo_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_info_t));
+    //ec_pdo_entry_info_t tx_entries[slave->TxPdo_count];
+    tx_entries = (ec_pdo_entry_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_entry_info_t));
+    //ec_pdo_info_t tx_pdos[slave->TxPdo_count];
+    tx_pdos = (ec_pdo_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_info_t));
 
 
     slave_syncs[slave->sm_count] = (ec_sync_info_t){0xff};  // list termination
@@ -109,11 +120,21 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         rx_pdos[i].n_entries = 1;
         slave_syncs[rxpdo.sm].dir = EC_DIR_OUTPUT;
         slave_syncs[rxpdo.sm].n_pdos++;
+        slave_syncs[rxpdo.sm].pdos = rx_pdos;
     }
-
-    for (int i = 0;i < slave->sm_count;i++){
-        ;//slave->Sm[i];
-        //slave_syncs[i] = (ec_sync_info_t){{i, EC_DIR_OUTPUT, 4, el2004_pdos}};
+    
+    // tx pdos
+    for (int i = 0;i < slave->TxPdo_count;i++){
+        EcatPdo txpdo = slave->TxPDO[i];
+        tx_entries[i].subindex = txpdo.entryindex;
+        tx_entries[i].index = i;
+        tx_entries[i].bit_length = txpdo.bitlen;
+        tx_pdos[i].entries = &rx_entries[i];
+        tx_pdos[i].index = txpdo.index;
+        tx_pdos[i].n_entries = 1;
+        slave_syncs[txpdo.sm].dir = EC_DIR_INPUT;
+        slave_syncs[txpdo.sm].n_pdos++;
+        slave_syncs[txpdo.sm].pdos = tx_pdos;
     }
 
     if (!config->config_only_flag){
