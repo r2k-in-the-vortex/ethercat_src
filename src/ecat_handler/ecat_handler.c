@@ -236,7 +236,7 @@ int NameTypeAndPrefix(PdoRegistryEntry *pdo, char *name, char *prefix, char *dty
         log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
         return -1;
     }
-    sprintf(comment, "//%s", pdo->slavename);
+    sprintf(comment, "(* %s *)", pdo->slavename);
     return 0;
 }
 
