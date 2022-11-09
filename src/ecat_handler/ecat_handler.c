@@ -202,6 +202,77 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     log_trace("Slave configured");
     return 0;
 }
+
+int NameTypeAndPrefix(PdoRegistryEntry *pdo, char *name, char *prefix, char *dtype, char *comment){
+    strcpy(name, pdo->pdoname);
+    int i=0;
+    while (name[i])
+    {
+        if (isspace(name[i])) 
+            name[i]='_';
+        i++;
+    }
+    // supported types on PLC side are limited
+    if (pdo->bitlength == 1){
+        strcpy(dtype, "BOOL");
+        strcpy(prefix, "X");
+    } else if (pdo->bitlength == 8){
+        strcpy(dtype, "BYTE");
+        strcpy(prefix, "B");
+    } else if (pdo->bitlength == 16){
+        strcpy(dtype, "UINT");
+        strcpy(prefix, "W");
+    } else if (pdo->bitlength == 32){
+        strcpy(dtype, "DINT");
+        strcpy(prefix, "D");
+        log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
+        return -1;
+    } else if (pdo->bitlength == 64){
+        strcpy(dtype, "LINT");
+        strcpy(prefix, "L");
+        log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
+        return -1;
+    } else{
+        log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
+        return -1;
+    }
+    sprintf(comment, "//%s", pdo->slavename);
+    return 0;
+}
+
+int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
+
+    log_info("PLC IO Printout, copy this to VAR..END_VAR of main program or something");
+    log_info("Variable names may be modified at will as long as the adresses and variable sizes remain the same");
+    
+    for (int i = 0;i < txregistry_count;i++){
+        PdoRegistryEntry pdo = TxPdoRegistry[i];
+        //Output1 AT %QX0.0 : BOOL;
+        char name[strlen(pdo.pdoname)];
+        char dtype[10];
+        char prefix[10];
+        char comment[255];
+        if(NameTypeAndPrefix(&pdo, name, prefix, dtype, comment)){
+            log_error("PLC variable printout failed");
+            return -1;
+        }
+        printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+    }
+    for (int i = 0;i < rxregistry_count;i++){
+        PdoRegistryEntry pdo = RxPdoRegistry[i];
+        //Output1 AT %QX0.0 : BOOL;
+        char name[strlen(pdo.pdoname)];
+        char dtype[10];
+        char prefix[10];
+        char comment[255];
+        if(NameTypeAndPrefix(&pdo, name, prefix, dtype, comment)){
+            log_error("PLC variable printout failed");
+            return -1;
+        }
+        printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+    }
+    return 0;
+}
 /****************************************************************************/
 int EtherCATinit(EcatConfig *config){
     unsigned int ver = ecrt_version_magic();
@@ -279,6 +350,9 @@ int EtherCATinit(EcatConfig *config){
         log_trace("%i slave %i %s | %s | %i bits", pdo.pdoidx, pdo.slaveposition, pdo.slavename, pdo.pdoname, pdo.bitlength);
     }
 
+    if(PlcInputOutputPrintout(rxregistry_count, txregistry_count)){
+        goto out_release_master;
+    }
 
     log_trace("Activating master...");
     if (!config->config_only_flag){
