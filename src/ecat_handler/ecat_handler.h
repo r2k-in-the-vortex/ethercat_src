@@ -11,6 +11,12 @@ typedef PdoRegistryEntry *PdoRegistryEntryPtr;
 struct _PdoRegistryEntry{
     unsigned int        offset;                             // PDO entry's (byte-)offset in the process data.
     unsigned int        bit_position;                       // bit position (0-7) within the \a offset
+    unsigned int        slaveposition;                      // slave position in ethercat chain
+    unsigned char       *slavename;                         // slave name
+    unsigned char       *slavetype;                         // slave type
+    unsigned int        bitlength;                          // number of bits
+    unsigned int        pdoidx;                             // registry PDO index, use this to link PLC
+    const char          *pdoname;                           // pdo name, example 'Channel 6'
 };
 
 /**
@@ -21,11 +27,11 @@ struct _PdoRegistryEntry{
 typedef struct _EcatSm EcatSm;
 typedef EcatSm *EcatSmPtr;
 struct _EcatSm{
-    uint32_t            Index;           // order of specificatio in device decsription
-    uint32_t            Enable;          // 1 for input, 9 for output, messagebox?
-    uint32_t            StartAddress;    // Determines from which address the Sync Channel is active.
-    uint32_t            ControlByte;     // ? Configuration data written to the SyncManager. The expression in parentheses starts with the number "1" or with the number "3". Number "1" means that the corresponding Sync Channel operates in 1-buffer mode, number "3" means that the corresponding Sync Channel operates in 3-buffer mode. The 1-buffer mode is also called mailbox mode.
-    uint32_t            DefaultSize;     // Length of the Sync Channel in bytes. If the length is 0, the Sync Channel is not enabled.
+    uint32_t            Index;                              // order of specificatio in device decsription
+    uint32_t            Enable;                             // 1 for input, 9 for output, messagebox?
+    uint32_t            StartAddress;                       // Determines from which address the Sync Channel is active.
+    uint32_t            ControlByte;                        // ? Configuration data written to the SyncManager. The expression in parentheses starts with the number "1" or with the number "3". Number "1" means that the corresponding Sync Channel operates in 1-buffer mode, number "3" means that the corresponding Sync Channel operates in 3-buffer mode. The 1-buffer mode is also called mailbox mode.
+    uint32_t            DefaultSize;                        // Length of the Sync Channel in bytes. If the length is 0, the Sync Channel is not enabled.
 };
 
 /**

@@ -68,29 +68,43 @@ static uint8_t *domain1_pd = NULL;
 
 
 /****************************************************************************/
-int RegisterRxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry){
-    domain1_regs[domain1_regs_idx].alias                  =       slave->alias;
-    domain1_regs[domain1_regs_idx].position               =       slave->position;
-    domain1_regs[domain1_regs_idx].vendor_id              =       slave->vendor_id;
-    domain1_regs[domain1_regs_idx].product_code           =       slave->product_code;
-    domain1_regs[domain1_regs_idx].index                  =       entry->index;
-    domain1_regs[domain1_regs_idx].subindex               =       entry->subindex;
-    domain1_regs[domain1_regs_idx].offset                 =       &RxPdoRegistry[RxPdoRegistry_idx].offset;
-    domain1_regs[domain1_regs_idx].bit_position           =       &RxPdoRegistry[RxPdoRegistry_idx].bit_position;
+int RegisterRxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry, EcatPdo *pdo){
+    domain1_regs[domain1_regs_idx].alias                    =           slave->alias;
+    domain1_regs[domain1_regs_idx].position                 =           slave->position;
+    domain1_regs[domain1_regs_idx].vendor_id                =           slave->vendor_id;
+    domain1_regs[domain1_regs_idx].product_code             =           slave->product_code;
+    domain1_regs[domain1_regs_idx].index                    =           entry->index;
+    domain1_regs[domain1_regs_idx].subindex                 =           entry->subindex;
+    domain1_regs[domain1_regs_idx].offset                   =           &RxPdoRegistry[RxPdoRegistry_idx].offset;
+    domain1_regs[domain1_regs_idx].bit_position             =           &RxPdoRegistry[RxPdoRegistry_idx].bit_position;
+
+    RxPdoRegistry[RxPdoRegistry_idx].slaveposition          =           slave->position;
+    RxPdoRegistry[RxPdoRegistry_idx].slavename              =           slave->name;
+    RxPdoRegistry[RxPdoRegistry_idx].slavetype              =           slave->type;
+    RxPdoRegistry[RxPdoRegistry_idx].bitlength              =           entry->bit_length;
+    RxPdoRegistry[RxPdoRegistry_idx].pdoname                =           pdo->name;
+    RxPdoRegistry[RxPdoRegistry_idx].pdoidx                 =           RxPdoRegistry_idx;
 
     domain1_regs_idx++;
     RxPdoRegistry_idx++;
     return 0;
 }
-int RegisterTxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry){
-    domain1_regs[domain1_regs_idx].alias                  =       slave->alias;
-    domain1_regs[domain1_regs_idx].position               =       slave->position;
-    domain1_regs[domain1_regs_idx].vendor_id              =       slave->vendor_id;
-    domain1_regs[domain1_regs_idx].product_code           =       slave->product_code;
-    domain1_regs[domain1_regs_idx].index                  =       entry->index;
-    domain1_regs[domain1_regs_idx].subindex               =       entry->subindex;
-    domain1_regs[domain1_regs_idx].offset                 =       &TxPdoRegistry[TxPdoRegistry_idx].offset;
-    domain1_regs[domain1_regs_idx].bit_position           =       &TxPdoRegistry[TxPdoRegistry_idx].bit_position;
+int RegisterTxInDomain(SlaveConfig *slave, ec_pdo_entry_info_t *entry, EcatPdo *pdo){
+    domain1_regs[domain1_regs_idx].alias                    =           slave->alias;
+    domain1_regs[domain1_regs_idx].position                 =           slave->position;
+    domain1_regs[domain1_regs_idx].vendor_id                =           slave->vendor_id;
+    domain1_regs[domain1_regs_idx].product_code             =           slave->product_code;
+    domain1_regs[domain1_regs_idx].index                    =           entry->index;
+    domain1_regs[domain1_regs_idx].subindex                 =           entry->subindex;
+    domain1_regs[domain1_regs_idx].offset                   =           &TxPdoRegistry[TxPdoRegistry_idx].offset;
+    domain1_regs[domain1_regs_idx].bit_position             =           &TxPdoRegistry[TxPdoRegistry_idx].bit_position;
+
+    TxPdoRegistry[TxPdoRegistry_idx].slaveposition          =           slave->position;
+    TxPdoRegistry[TxPdoRegistry_idx].slavename              =           slave->name;
+    TxPdoRegistry[TxPdoRegistry_idx].slavetype              =           slave->type;
+    TxPdoRegistry[TxPdoRegistry_idx].bitlength              =           entry->bit_length;
+    TxPdoRegistry[TxPdoRegistry_idx].pdoname                =           pdo->name;
+    TxPdoRegistry[TxPdoRegistry_idx].pdoidx                 =           TxPdoRegistry_idx;
 
     domain1_regs_idx++;
     TxPdoRegistry_idx++;
@@ -138,7 +152,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         slave_syncs[rxpdo.sm].dir = EC_DIR_OUTPUT;
         slave_syncs[rxpdo.sm].n_pdos++;
         slave_syncs[rxpdo.sm].pdos = rx_pdos;
-        if(RegisterRxInDomain(slave, &rx_entries[i])){
+        if(RegisterRxInDomain(slave, &rx_entries[i], &rxpdo)){
             log_error("Failed to register RxPDO in domain");
             return -1;
         }
@@ -156,7 +170,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         slave_syncs[txpdo.sm].dir = EC_DIR_INPUT;
         slave_syncs[txpdo.sm].n_pdos++;
         slave_syncs[txpdo.sm].pdos = tx_pdos;
-        if(RegisterTxInDomain(slave, &tx_entries[i])){
+        if(RegisterTxInDomain(slave, &tx_entries[i], &txpdo)){
             log_error("Failed to register TxPDO in domain");
             return -1;
         }
@@ -222,7 +236,7 @@ int EtherCATinit(EcatConfig *config){
     }
     domain1_regs = (ec_pdo_entry_reg_t*) malloc((rxregistry_count + txregistry_count) * sizeof(ec_pdo_entry_reg_t));
     //static PdoRegistryEntry         *TxPdoRegistry      = NULL;
-    TxPdoRegistry = (PdoRegistryEntry*) malloc(txregistry_count * sizeof(PdoRegistryEntry));
+    RxPdoRegistry = (PdoRegistryEntry*) malloc(rxregistry_count * sizeof(PdoRegistryEntry));
     TxPdoRegistry = (PdoRegistryEntry*) malloc(txregistry_count * sizeof(PdoRegistryEntry));
 
     log_trace("Rx Registry count %i", rxregistry_count);
@@ -252,6 +266,17 @@ int EtherCATinit(EcatConfig *config){
             log_error("PDO entry registration failed!");
             return -1;
         }
+    }
+    log_trace("PDO registry complete");
+    log_trace("RxPDO registries for linking with PLC");
+    for (int i = 0;i < rxregistry_count;i++){
+        PdoRegistryEntry pdo = RxPdoRegistry[i];
+        log_trace("%i slave %i %s | %s | %i bits", pdo.pdoidx, pdo.slaveposition, pdo.slavename, pdo.pdoname, pdo.bitlength);
+    }
+    log_trace("TxPDO registries for linking with PLC");
+    for (int i = 0;i < txregistry_count;i++){
+        PdoRegistryEntry pdo = TxPdoRegistry[i];
+        log_trace("%i slave %i %s | %s | %i bits", pdo.pdoidx, pdo.slaveposition, pdo.slavename, pdo.pdoname, pdo.bitlength);
     }
 
 

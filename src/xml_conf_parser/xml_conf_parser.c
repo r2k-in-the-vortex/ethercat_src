@@ -115,17 +115,17 @@ int ParseDeviceType(xmlNode *typedata, SlaveConfig *config){
     return 0;
 }
 
-int ParseDeviceName(xmlNode *namenode, char *name){
+int ParseDeviceName(xmlNode *namenode, char **name){
     if(namenode == NULL){
         log_error("name node not found");
         return -1;
     }
-    name = namenode->children->content;
-    if(name == NULL){
+    *name = namenode->children->content;
+    if(*name == NULL){
         log_error("no name parsed");
         return -1;
     }
-    log_trace("%s", name);
+    log_trace("%s", *name);
     return 0;
 }
 
@@ -185,7 +185,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
 
     log_trace("code  0x%08X | rev 0x%08X", config->product_code, config->product_revision);
 
-    if(ParseDeviceName(namenode, name))return -1;
+    if(ParseDeviceName(namenode, &name))return -1;
 
     // syncmanager count
     config->sm_count = countNodesNamed(device->children, "Sm");
@@ -228,6 +228,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
         start = start->next;
     }
 
+    config->name = name;
     config->Sm = Sms;
     config->RxPDO = RxPdos;
     config->TxPDO = TxPdos;
