@@ -97,7 +97,15 @@ struct _EcatConfig{
 };
 
 
+#ifdef __cplusplus
+extern "C"{
+#endif 
+
 /* set up ethercat comms */
 int EtherCATinit(EcatConfig *config);
 /* run cyclic task forever */
 int EtherCATcyclic();
+
+#ifdef __cplusplus
+}
+#endif

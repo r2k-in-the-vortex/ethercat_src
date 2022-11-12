@@ -25,11 +25,12 @@ set (LINK_LIBS ethercat                 # EtherLAB EtherCAT master user API
   )
 
 include_directories( ${INCLUDE_DIRS} )
-target_link_directories(${LIB_NAME} PUBLIC 
+target_link_directories(${LIB_NAME} PRIVATE 
   /usr/local/src/ethercat/lib
   /usr/local/lib
   )
 target_link_libraries (${LIB_NAME} 
-  ${LINK_LIBS} 
-  log
+  PRIVATE
+    ${LINK_LIBS} 
+    log
   )

@@ -1,7 +1,7 @@
-add_library(${PROJECT_NAME} ethercat_src.c)
+add_library(${PROJECT_NAME} SHARED ethercat_src.c)
 add_executable(${PROJECT_NAME}_test main.c)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 add_subdirectory(parser)
 add_subdirectory(xml_conf_parser)
@@ -26,12 +26,12 @@ target_link_libraries(${PROJECT_NAME}
     xml_conf_parser
     ecat_handler
     log
+)
+target_link_libraries(${PROJECT_NAME}_test
+  PRIVATE
+    ${PROJECT_NAME}
+    parser
+    xml_conf_parser
+    ecat_handler
+    log
   )
-  target_link_libraries(${PROJECT_NAME}_test
-    PRIVATE
-      ${PROJECT_NAME}
-      parser
-      xml_conf_parser
-      ecat_handler
-      log
-    )

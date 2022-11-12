@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(ethercat_src VERSION 0.1.0)
 
@@ -21,10 +21,3 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 
 # defines targets and sources
 add_subdirectory(src)
-
-# contains an "external" library we will link to
-#add_subdirectory(external)
-
-# enable testing and define tests
-#enable_testing()
-#add_subdirectory(tests)
