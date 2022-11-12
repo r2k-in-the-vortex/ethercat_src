@@ -387,7 +387,7 @@ out_release_master:
     return -1;
 }
 /****************************************************************************/
-int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
+int EtherCATcyclic(int buffersize, uint8_t **bool_input, uint8_t **bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
     if(!config_done)return 0;
     if(!msgonce)log_trace("enabled");
     if(buffersize < rxregistry_count || buffersize < txregistry_count){
@@ -405,7 +405,7 @@ int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, ui
     for (int i = 0;i < rxregistry_count;i++){
         PdoRegistryEntry pdo = RxPdoRegistry[i];
         if(pdo.bitlength == 1){
-            bool_input[i] = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
+            bool_input[i][0] = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
         } else if(pdo.bitlength == 8){
             byte_input[i] = EC_READ_U8(domain1_pd + pdo.offset);
         } else if(pdo.bitlength == 16){
@@ -417,7 +417,7 @@ int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, ui
     for (int i = 0;i < txregistry_count;i++){
         PdoRegistryEntry pdo = TxPdoRegistry[i];
         if(pdo.bitlength == 1){
-            EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, bool_output[i]);
+            EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, bool_output[i][0]);
         } else if(pdo.bitlength == 8){
             EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i]);
         } else if(pdo.bitlength == 16){

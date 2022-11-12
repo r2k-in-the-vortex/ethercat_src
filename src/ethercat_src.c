@@ -127,7 +127,7 @@ int ethercat_configure(char *paramsfile){
     return 0;
 }
 
-int ethercat_callcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
+int ethercat_callcyclic(int buffersize, uint8_t **bool_input, uint8_t **bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
     return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output);
 }
 /****************************************************************************/
