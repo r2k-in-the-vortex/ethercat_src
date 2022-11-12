@@ -74,6 +74,8 @@ static int                      msgonce             = 0;
 // the rest must still be able to work
 static int                      init_done           = 0;
 
+static EcatConfig               *config             = NULL;
+
 // process data
 static uint8_t *domain1_pd = NULL;
 
@@ -285,7 +287,8 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
     return 0;
 }
 /****************************************************************************/
-int EtherCATinit(EcatConfig *config){
+int EtherCATinit(EcatConfig *configin){
+    config = configin;
     config_done = 0;
     unsigned int ver = ecrt_version_magic();
     log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
@@ -380,7 +383,7 @@ int EtherCATinit(EcatConfig *config){
     }
 
     log_trace("/dev/EtherCAT%i set up, ready to start cyclic", config->master_index);
-    config_done = !config->config_only_flag;
+    config_done = 1;
     return 0;
     
 out_release_master:
@@ -428,15 +431,18 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
         log_error("PDO count rxregistry_count=%i or txregistry_count=%i too large for buffersize=%i increase buffer", rxregistry_count, txregistry_count, buffersize);
         return -1;
     }
-    // receive process data
-    ecrt_master_receive(master);
-    ecrt_domain_process(domain1);
 
-    // check process data state
-    check_domain1_state();
+    if(!config->config_only_flag){
+        // receive process data
+        ecrt_master_receive(master);
+        ecrt_domain_process(domain1);
 
-    // optional
-    check_master_state();
+        // check process data state
+        check_domain1_state();
+
+        // optional
+        check_master_state();
+    } else init_done = 1;
 
     if(!init_done && domain1_state.wc_state == EC_WC_COMPLETE){
         init_done = 1;
@@ -452,15 +458,21 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
         // read inputs
         for (int i = 0;i < txregistry_count;i++){
             PdoRegistryEntry pdo = TxPdoRegistry[i];
+            
             if(pdo.bitlength == 1){
-                uint8_t readval = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
-                if(bool_input[i] != NULL){
+                uint8_t readval = config->config_only_flag ? 0 : EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
+                if(!config->config_only_flag){
                     bool_input[i][0] = readval;
+                } else {
+                    // simulate input to check
+                    if(i == 0){
+                        bool_input[i][0] = (uint8_t)bool_output[i][0];
+                    }
                 }
             } else if(pdo.bitlength == 8){
-                byte_input[i] = EC_READ_U8(domain1_pd + pdo.offset);
+                byte_input[i] = config->config_only_flag ? 0 : EC_READ_U8(domain1_pd + pdo.offset);
             } else if(pdo.bitlength == 16){
-                word_input[i] = EC_READ_U16(domain1_pd + pdo.offset);
+                word_input[i] = config->config_only_flag ? 0 : EC_READ_U16(domain1_pd + pdo.offset);
             }
         }
         
@@ -468,25 +480,25 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
         for (int i = 0;i < rxregistry_count;i++){
             PdoRegistryEntry pdo = RxPdoRegistry[i];
             if(pdo.bitlength == 1){
-                if (bool_output[i] != NULL) {
-                    if (bool_output[i][0]){
-                        EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 1);
-                    }else{
-                        EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 0);
-                    }
-                } else {
-                    printf("bool_output[] NULL");
+                if ((uint8_t)bool_output[i][0]){
+                    if(config->config_only_flag && i == 0) log_trace("OUT=1");
+                    if(!config->config_only_flag) EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 1);
+                }else{
+                    if(config->config_only_flag && i == 0) log_trace("OUT=0");
+                    if(!config->config_only_flag) EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 0);
                 }
             } else if(pdo.bitlength == 8){
-                EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i][0]);
+                if(!config->config_only_flag) EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i]);
             } else if(pdo.bitlength == 16){
-                EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i][0]);
+                if(!config->config_only_flag) EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i]);
             }
         }
     }
-    // send process data
-    ecrt_domain_queue(domain1);
-    ecrt_master_send(master);
+    if(!config->config_only_flag){
+        // send process data
+        ecrt_domain_queue(domain1);
+        ecrt_master_send(master);
+    }
     if(!msgonce){
         log_trace("cycle complete");
         msgonce = 1;
