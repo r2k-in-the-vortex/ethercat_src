@@ -64,6 +64,11 @@ static ec_pdo_entry_info_t      *tx_entries         = NULL;
 static ec_pdo_info_t            *tx_pdos            = NULL;
 
 
+static int                      rxregistry_count    = 0;
+static int                      txregistry_count    = 0;
+static int                      config_done         = 0;
+
+
 // process data
 static uint8_t *domain1_pd = NULL;
 
@@ -276,6 +281,7 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
 }
 /****************************************************************************/
 int EtherCATinit(EcatConfig *config){
+    config_done = 0;
     unsigned int ver = ecrt_version_magic();
     log_trace("Initializing EtherCAT ecrt_version_magic %u", ver);
 
@@ -300,8 +306,8 @@ int EtherCATinit(EcatConfig *config){
     log_trace("Domain created");
 
     // count registers
-    int rxregistry_count = 0;
-    int txregistry_count = 0;
+    rxregistry_count = 0;
+    txregistry_count = 0;
     for (int i = 0; i < config->slave_count; i++){
         rxregistry_count += config->slavesConfig[i].RxPdo_count;
         txregistry_count += config->slavesConfig[i].TxPdo_count;
@@ -369,6 +375,7 @@ int EtherCATinit(EcatConfig *config){
     }
 
     log_trace("/dev/EtherCAT%i set up, ready to start cyclic", config->master_index);
+    config_done = !config->config_only_flag;
     return 0;
     
 out_release_master:
@@ -379,6 +386,45 @@ out_release_master:
     return -1;
 }
 /****************************************************************************/
-int EtherCATcyclic(){
+int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
+    if(!config_done)return 0;
+    log_trace("enabled");
+    if(buffersize < rxregistry_count || rxregistry_count < txregistry_count){
+        return -1;
+    }
+    // receive process data
+    ecrt_master_receive(master);
+    ecrt_domain_process(domain1);
+
+    // check process data state, ecrt_domain_state() is maybe the correct method, but maybe not necessary
+    // check_domain1_state();
+
+    // read inputs
+    for (int i = 0;i < rxregistry_count;i++){
+        PdoRegistryEntry pdo = RxPdoRegistry[i];
+        if(pdo.bitlength == 1){
+            bool_input[i] = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
+        } else if(pdo.bitlength == 8){
+            byte_input[i] = EC_READ_U8(domain1_pd + pdo.offset);
+        } else if(pdo.bitlength == 16){
+            word_input[i] = EC_READ_U16(domain1_pd + pdo.offset);
+        }
+    }
+    
+    // write outputs
+    for (int i = 0;i < txregistry_count;i++){
+        PdoRegistryEntry pdo = TxPdoRegistry[i];
+        if(pdo.bitlength == 1){
+            EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, bool_output[i]);
+        } else if(pdo.bitlength == 8){
+            EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i]);
+        } else if(pdo.bitlength == 16){
+            EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i]);
+        }
+    }
+
+    // send process data
+    ecrt_domain_queue(domain1);
+    ecrt_master_send(master);
     return 0;
 }

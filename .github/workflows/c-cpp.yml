@@ -44,4 +44,5 @@ jobs:
     #can't test without configured /dev/EtherCAT0 from here on
     - name: test
       # testrun
-      run: ./build/bin/ecat_test --filename conf/master_config.xml -v -c
+      # run: ./build/bin/ecat_test --filename conf/master_config.xml -v -c
+      run: ./build/bin/ethercat_src_test conf/ethercatcfg.txt

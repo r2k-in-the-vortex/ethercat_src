@@ -58,7 +58,6 @@ int main2(int argc, char **argv)
 
     EtherCATinit(&config);
 
-    EtherCATcyclic();
 
     return ret;
 }
