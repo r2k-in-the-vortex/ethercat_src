@@ -69,6 +69,10 @@ static int                      txregistry_count    = 0;
 static int                      config_done         = 0;
 
 static int                      msgonce             = 0;
+// for some reason slaves don't start at all if non-zero data is sent too early
+// have to think of a better solution, if one slave is in fault state or whatever
+// the rest must still be able to work
+static int                      init_done           = 0;
 
 // process data
 static uint8_t *domain1_pd = NULL;
@@ -387,6 +391,36 @@ out_release_master:
     return -1;
 }
 /****************************************************************************/
+void check_domain1_state(void)
+{
+    ec_domain_state_t ds;
+
+    ecrt_domain_state(domain1, &ds);
+
+    if (ds.working_counter != domain1_state.working_counter)
+        log_trace("Domain1: WC %u.\n", ds.working_counter);
+    if (ds.wc_state != domain1_state.wc_state)
+        log_trace("Domain1: State %u.\n", ds.wc_state);
+
+    domain1_state = ds;
+}
+
+void check_master_state(void)
+{
+    ec_master_state_t ms;
+
+    ecrt_master_state(master, &ms);
+
+    if (ms.slaves_responding != master_state.slaves_responding)
+        printf("%u slave(s).\n", ms.slaves_responding);
+    if (ms.al_states != master_state.al_states)
+        printf("AL states: 0x%02X.\n", ms.al_states);
+    if (ms.link_up != master_state.link_up)
+        printf("Link is %s.\n", ms.link_up ? "up" : "down");
+
+    master_state = ms;
+}
+
 int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output, uint8_t **byte_input, uint8_t **byte_output, uint16_t **word_input, uint16_t **word_output){
     if(!config_done)return 0;
     if(!msgonce)log_trace("enabled");
@@ -398,33 +432,58 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
     ecrt_master_receive(master);
     ecrt_domain_process(domain1);
 
-    // check process data state, ecrt_domain_state() is maybe the correct method, but maybe not necessary
-    // check_domain1_state();
+    // check process data state
+    check_domain1_state();
 
-    // read inputs
-    for (int i = 0;i < rxregistry_count;i++){
-        PdoRegistryEntry pdo = RxPdoRegistry[i];
-        if(pdo.bitlength == 1){
-            bool_input[i][0][0] = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
-        } else if(pdo.bitlength == 8){
-            byte_input[i][0] = EC_READ_U8(domain1_pd + pdo.offset);
-        } else if(pdo.bitlength == 16){
-            word_input[i][0] = EC_READ_U16(domain1_pd + pdo.offset);
+    // optional
+    check_master_state();
+
+    if(!init_done && domain1_state.wc_state == EC_WC_COMPLETE){
+        init_done = 1;
+        log_trace("Domain1: WC %u.", domain1_state.working_counter);
+        log_trace("Domain1: State %u.", domain1_state.wc_state);
+        log_trace("%u slave(s).", master_state.slaves_responding);
+        log_trace("AL states: 0x%02X.", master_state.al_states);
+        log_trace("Link is %s.", master_state.link_up ? "up" : "down");
+    }
+	// for some mysterious reason writing data too early prevents slaves responding correctly
+    // needs a better fix in future
+    if(init_done){
+        // read inputs
+        for (int i = 0;i < txregistry_count;i++){
+            PdoRegistryEntry pdo = TxPdoRegistry[i];
+            if(pdo.bitlength == 1){
+                uint8_t readval = EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
+                if(bool_input[i] != NULL){
+                    bool_input[i][0] = readval;
+                }
+            } else if(pdo.bitlength == 8){
+                byte_input[i] = EC_READ_U8(domain1_pd + pdo.offset);
+            } else if(pdo.bitlength == 16){
+                word_input[i] = EC_READ_U16(domain1_pd + pdo.offset);
+            }
+        }
+        
+        // write outputs
+        for (int i = 0;i < rxregistry_count;i++){
+            PdoRegistryEntry pdo = RxPdoRegistry[i];
+            if(pdo.bitlength == 1){
+                if (bool_output[i] != NULL) {
+                    if (bool_output[i][0]){
+                        EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 1);
+                    }else{
+                        EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 0);
+                    }
+                } else {
+                    printf("bool_output[] NULL");
+                }
+            } else if(pdo.bitlength == 8){
+                EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i][0]);
+            } else if(pdo.bitlength == 16){
+                EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i][0]);
+            }
         }
     }
-    
-    // write outputs
-    for (int i = 0;i < txregistry_count;i++){
-        PdoRegistryEntry pdo = TxPdoRegistry[i];
-        if(pdo.bitlength == 1){
-            EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, bool_output[i][0][0]);
-        } else if(pdo.bitlength == 8){
-            EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i][0]);
-        } else if(pdo.bitlength == 16){
-            EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i][0]);
-        }
-    }
-
     // send process data
     ecrt_domain_queue(domain1);
     ecrt_master_send(master);
