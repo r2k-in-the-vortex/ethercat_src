@@ -21,9 +21,13 @@
 #include "xml_conf_parser.h"
 #include "ecat_handler.h"
 #include "log.h"
+#include "ethercat_src.h"
 /****************************************************************************/
-
-int main(int argc, char **argv)
+int main (int argc, char **argv){
+    ethercat_configure(argv[1]);
+    return 0;
+}
+int main2(int argc, char **argv)
 {
     int ret = 0;
     struct gengetopt_args_info ai;

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <ecrt.h>
 #include "log.h"
 #include "ecat_handler.h"
