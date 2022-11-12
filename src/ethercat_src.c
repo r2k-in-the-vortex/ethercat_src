@@ -24,6 +24,7 @@
 #include "log.h"
 #include "ethercat_src.h"
 /****************************************************************************/
+static char *enableparam;
 static char *xmlfilenameparam;
 static char *ethercat_device_indexparam;
 static char *verboseparam;
@@ -54,6 +55,7 @@ int parseparam(char *line){
     int len = strlen(line);
     if(len == 0)return 0;
     if(line[0] == '#')return 0;
+    checkforparam(line, "enable=", &enableparam);
     checkforparam(line, "xmlfilename=", &xmlfilenameparam);
     checkforparam(line, "ethercat_device_index=", &ethercat_device_indexparam);
     checkforparam(line, "verbose=", &verboseparam);
@@ -109,14 +111,17 @@ int ethercat_configure(char *paramsfile){
         log_error("Failed to open file '%s'", paramsfile);
         return -1;
     }
-    log_trace("xmlfilenameparam: %s", xmlfilenameparam);
-    log_trace("ethercat_device_indexparam: %s", ethercat_device_indexparam);
-    log_trace("verboseparam: %s", verboseparam);
-    log_trace("configonlyparam: %s", configonlyparam);
 
     int ethercat_device_index = atoi(ethercat_device_indexparam);
     int verbose = atoi(verboseparam);
     int configonly = atoi(configonlyparam);
+    int enable = atoi(enableparam);
+    if (!enable)return 0;
+    
+    log_trace("xmlfilenameparam: %s", xmlfilenameparam);
+    log_trace("ethercat_device_indexparam: %s", ethercat_device_indexparam);
+    log_trace("verboseparam: %s", verboseparam);
+    log_trace("configonlyparam: %s", configonlyparam);
     
     ethercat_configure_byxml(xmlfilenameparam, ethercat_device_index, verbose, configonly);
     return 0;

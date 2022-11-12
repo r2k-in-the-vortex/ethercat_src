@@ -1,3 +1,5 @@
+# if enable=0 then just skipping EtherCAT entirely
+enable=1
 # xml defining ethercat slaves
 xmlfilename=/home/r2k/OpenPLC_v3/utils/ethercat_src/conf/master_config.xml
 ster_config.xml
