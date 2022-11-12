@@ -68,6 +68,7 @@ static int                      rxregistry_count    = 0;
 static int                      txregistry_count    = 0;
 static int                      config_done         = 0;
 
+static int                      msgonce             = 0;
 
 // process data
 static uint8_t *domain1_pd = NULL;
@@ -388,8 +389,9 @@ out_release_master:
 /****************************************************************************/
 int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, uint8_t *byte_input, uint8_t *byte_output, uint16_t *word_input, uint16_t *word_output){
     if(!config_done)return 0;
-    log_trace("enabled");
-    if(buffersize < rxregistry_count || rxregistry_count < txregistry_count){
+    if(!msgonce)log_trace("enabled");
+    if(buffersize < rxregistry_count || buffersize < txregistry_count){
+        log_error("PDO count rxregistry_count=%i or txregistry_count=%i too large for buffersize=%i increase buffer", rxregistry_count, txregistry_count, buffersize);
         return -1;
     }
     // receive process data
@@ -426,5 +428,9 @@ int EtherCATcyclic(int buffersize, uint8_t *bool_input, uint8_t *bool_output, ui
     // send process data
     ecrt_domain_queue(domain1);
     ecrt_master_send(master);
+    if(!msgonce){
+        log_trace("cycle complete");
+        msgonce = 1;
+    }
     return 0;
 }
