@@ -34,4 +34,8 @@ target_link_libraries(${PROJECT_NAME}_test
     xml_conf_parser
     ecat_handler
     log
-  )
+)
+
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
