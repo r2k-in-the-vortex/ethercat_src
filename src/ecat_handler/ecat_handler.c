@@ -77,6 +77,7 @@ static int                      msgonce             = 0;
 static int                      init_done           = 0;
 
 static EcatConfig               *config             = NULL;
+static int                      wcincompletecounter = 0;
 
 // process data
 static uint8_t *domain1_pd = NULL;
@@ -301,6 +302,7 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
 /****************************************************************************/
 int EtherCATinit(EcatConfig *configin, logger_callback logger){
     plclogger = logger;
+    wcincompletecounter = 0;
 
     if(plclogger != NULL)plclogger("Configuring EtherCAT\n");
     config = configin;
@@ -458,7 +460,6 @@ char *boolarrayptr1(void *ptr, int i1){
     return ptr + i1 * sizeof(uint8_t) * 8 * 8;
 }
 
-
 int EtherCATcyclic(int buffersize, 
         boolvar_call_back bool_input, 
         boolvar_call_back bool_output, 
@@ -497,6 +498,10 @@ int EtherCATcyclic(int buffersize,
         log_trace("%u slave(s).", master_state.slaves_responding);
         log_trace("AL states: 0x%02X.", master_state.al_states);
         log_trace("Link is %s.", master_state.link_up ? "up" : "down");
+    } else {
+        wcincompletecounter++;
+        if (wcincompletecounter > 500) init_done = 1;
+        if (wcincompletecounter % 50 == 0)log_trace("domain1_state.wc_state != EC_WC_COMPLETE"); 
     }
 	// for some mysterious reason writing data too early prevents slaves responding correctly
     // needs a better fix in future
