@@ -101,10 +101,20 @@ struct _EcatConfig{
 extern "C"{
 #endif 
 
+typedef u_int8_t *(*boolvar_call_back) (int, int);
+typedef u_int8_t *(*int8var_call_back) (int);
+typedef u_int16_t *(*int16var_call_back) (int);
+
 /* set up ethercat comms */
 int EtherCATinit(EcatConfig *config);
 /* run cyclic task forever */
-int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output, uint8_t **byte_input, uint8_t **byte_output, uint16_t **word_input, uint16_t **word_output);
+int EtherCATcyclic(int buffersize, 
+        boolvar_call_back bool_input, 
+        boolvar_call_back bool_output, 
+        int8var_call_back byte_input, 
+        int8var_call_back byte_output, 
+        int16var_call_back word_input, 
+        int16var_call_back word_output);
 
 #ifdef __cplusplus
 }

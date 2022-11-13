@@ -424,7 +424,19 @@ void check_master_state(void)
     master_state = ms;
 }
 
-int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output, uint8_t **byte_input, uint8_t **byte_output, uint16_t **word_input, uint16_t **word_output){
+char *boolarrayptr1(void *ptr, int i1){
+    return ptr + i1 * sizeof(uint8_t) * 8 * 8;
+}
+
+
+int EtherCATcyclic(int buffersize, 
+        boolvar_call_back bool_input, 
+        boolvar_call_back bool_output, 
+        int8var_call_back byte_input, 
+        int8var_call_back byte_output, 
+        int16var_call_back word_input, 
+        int16var_call_back word_output){
+
     if(!config_done)return 0;
     if(!msgonce)log_trace("enabled");
     if(buffersize < rxregistry_count || buffersize < txregistry_count){
@@ -461,18 +473,22 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
             
             if(pdo.bitlength == 1){
                 uint8_t readval = config->config_only_flag ? 0 : EC_READ_BIT(domain1_pd + pdo.offset, pdo.bit_position);
+                uint8_t *ptr = bool_input(i, 0);
                 if(!config->config_only_flag){
-                    bool_input[i][0] = readval;
+                    *ptr = readval;
                 } else {
-                    // simulate input to check
+                    // simulate input for testing
                     if(i == 0){
-                        bool_input[i][0] = (uint8_t)bool_output[i][0];
+                        uint8_t *ptrout = bool_output(i, 0);
+                        *ptr = *ptrout;
                     }
                 }
             } else if(pdo.bitlength == 8){
-                byte_input[i] = config->config_only_flag ? 0 : EC_READ_U8(domain1_pd + pdo.offset);
+                uint8_t *ptr = byte_input(i);
+                *ptr = config->config_only_flag ? 0 : EC_READ_U8(domain1_pd + pdo.offset);
             } else if(pdo.bitlength == 16){
-                word_input[i] = config->config_only_flag ? 0 : EC_READ_U16(domain1_pd + pdo.offset);
+                uint16_t *ptr = word_input(i);
+                *ptr = config->config_only_flag ? 0 : EC_READ_U16(domain1_pd + pdo.offset);
             }
         }
         
@@ -480,7 +496,8 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
         for (int i = 0;i < rxregistry_count;i++){
             PdoRegistryEntry pdo = RxPdoRegistry[i];
             if(pdo.bitlength == 1){
-                if ((uint8_t)bool_output[i][0]){
+                uint8_t *ptrout = bool_output(i, 0);
+                if (*ptrout){
                     if(config->config_only_flag && i == 0) log_trace("OUT=1");
                     if(!config->config_only_flag) EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 1);
                 }else{
@@ -488,9 +505,11 @@ int EtherCATcyclic(int buffersize, uint8_t ***bool_input, uint8_t ***bool_output
                     if(!config->config_only_flag) EC_WRITE_BIT(domain1_pd + pdo.offset, pdo.bit_position, 0);
                 }
             } else if(pdo.bitlength == 8){
-                if(!config->config_only_flag) EC_WRITE_U8(domain1_pd + pdo.offset, byte_output[i]);
+                uint8_t *ptrout = byte_output(i);
+                if(!config->config_only_flag) EC_WRITE_U8(domain1_pd + pdo.offset, *ptrout);
             } else if(pdo.bitlength == 16){
-                if(!config->config_only_flag) EC_WRITE_U16(domain1_pd + pdo.offset, word_output[i]);
+                uint16_t *ptrout = word_output(i);
+                if(!config->config_only_flag) EC_WRITE_U16(domain1_pd + pdo.offset, *ptrout);
             }
         }
     }
