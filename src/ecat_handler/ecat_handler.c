@@ -491,17 +491,19 @@ int EtherCATcyclic(int buffersize,
         check_master_state();
     } else init_done = 1;
 
-    if(!init_done && domain1_state.wc_state == EC_WC_COMPLETE){
-        init_done = 1;
-        log_trace("Domain1: WC %u.", domain1_state.working_counter);
-        log_trace("Domain1: State %u.", domain1_state.wc_state);
-        log_trace("%u slave(s).", master_state.slaves_responding);
-        log_trace("AL states: 0x%02X.", master_state.al_states);
-        log_trace("Link is %s.", master_state.link_up ? "up" : "down");
-    } else {
-        wcincompletecounter++;
-        if (wcincompletecounter > 500) init_done = 1;
-        if (wcincompletecounter % 50 == 0)log_trace("domain1_state.wc_state != EC_WC_COMPLETE"); 
+    if(!init_done){
+        if (domain1_state.wc_state == EC_WC_COMPLETE){
+            init_done = 1;
+            log_trace("Domain1: WC %u.", domain1_state.working_counter);
+            log_trace("Domain1: State %u.", domain1_state.wc_state);
+            log_trace("%u slave(s).", master_state.slaves_responding);
+            log_trace("AL states: 0x%02X.", master_state.al_states);
+            log_trace("Link is %s.", master_state.link_up ? "up" : "down");
+        } else {
+            wcincompletecounter++;
+            if (wcincompletecounter > 500) init_done = 1;
+            if (wcincompletecounter % 50 == 0)log_trace("domain1_state.wc_state != EC_WC_COMPLETE"); 
+        }
     }
 	// for some mysterious reason writing data too early prevents slaves responding correctly
     // needs a better fix in future
