@@ -453,9 +453,9 @@ void check_master_state(void)
         */
         if(ms.al_states == 1)strcpy(tempbuf, "INIT");
         else if(ms.al_states == 2)strcpy(tempbuf, "PREOP");
-        else if(ms.al_states == 2)strcpy(tempbuf, "SAFEOP");
-        else if(ms.al_states == 2)strcpy(tempbuf, "OP");
-        else if(ms.al_states == 2)sprintf(tempbuf, "0x%02X", ms.al_states);
+        else if(ms.al_states == 4)strcpy(tempbuf, "SAFEOP");
+        else if(ms.al_states == 8)strcpy(tempbuf, "OP");
+        else sprintf(tempbuf, "0x%02X", ms.al_states);
 
 
         sprintf(plcloggerbuffer, "AL states: %s.\n", tempbuf);
