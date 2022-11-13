@@ -580,3 +580,17 @@ int EtherCATcyclic(int buffersize,
     }
     return 0;
 }
+
+// after 
+void terminate_handler(){
+    free(domain1_regs);
+    free(RxPdoRegistry);
+    free(TxPdoRegistry);
+    free(sc_slaves);
+    free(sc_salves_states);
+    free(slave_syncs);
+    free(rx_entries);
+    free(rx_pdos);
+    free(tx_entries);
+    free(tx_pdos);
+}

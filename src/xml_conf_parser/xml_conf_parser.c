@@ -25,6 +25,8 @@
 
 /****************************************************************************/
 /****************************************************************************/
+static EcatConfig *ecat_config;
+
 xmlNode * getNextNodeNamed(xmlNode *start, char *name){
     xmlNode *node;
     for (node = start; node; node = node->next){
@@ -259,9 +261,9 @@ int ParseSlave(xmlNode *slaveinfo, SlaveConfig *config){
     return 0;
 }
 /****************************************************************************/
-int parse_xml_config(char *filename, EcatConfig *config){
+int parse_xml_config(char *filename, EcatConfig *newconfig){
     log_trace("parsing file %s", filename);
-    
+    ecat_config = newconfig;
     xmlDoc         *document;
     xmlNode        *root, *first_child, *node;
 
@@ -279,15 +281,15 @@ int parse_xml_config(char *filename, EcatConfig *config){
 
     first_child = root->children;
 
-    config->slave_count = countNodesNamed(first_child, expectedSlaveName);
+    ecat_config->slave_count = countNodesNamed(first_child, expectedSlaveName);
     
     
-    SlaveConfig *slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    SlaveConfig *slavesConfig = (SlaveConfig*) malloc(ecat_config->slave_count * sizeof(SlaveConfig));
     //slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
     uint32_t *test = &slavesConfig[0].product_revision;
 
-    config->slavesConfig = slavesConfig;
-    if (config->slavesConfig == NULL){
+    ecat_config->slavesConfig = slavesConfig;
+    if (ecat_config->slavesConfig == NULL){
         log_error("failed to alloc");
         return -1;
     }
@@ -300,11 +302,20 @@ int parse_xml_config(char *filename, EcatConfig *config){
                 log_error("Failed to parse slave");
                 return -1;
             }
-            config->slavesConfig[slaveindex] = conf;
+            ecat_config->slavesConfig[slaveindex] = conf;
             slaveindex++;
         }
     }
-    
+    xmlFreeDoc(document);
     return 0;
+}
+
+void terminate_xml_parsed_conf(){
+    for (int i = 0; i < ecat_config->slave_count;i++){
+        free(ecat_config->slavesConfig[i].Sm);
+        free(ecat_config->slavesConfig[i].RxPDO);
+        free(ecat_config->slavesConfig[i].TxPDO);
+    }
+    free(ecat_config->slavesConfig);
 }
 /****************************************************************************/

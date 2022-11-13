@@ -116,9 +116,11 @@ int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
         free(line);
     }
     else{
+        fclose(fp);
         log_error("Failed to open file '%s'", paramsfile);
         return -1;
     }
+    fclose(fp);
 
     int ethercat_device_index = atoi(ethercat_device_indexparam);
     int verbose = atoi(verboseparam);
@@ -143,5 +145,9 @@ int ethercat_callcyclic(int buffersize,
         int16var_call_back word_input, 
         int16var_call_back word_output){
     return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output);
+}
+
+void terminate_src(){
+    terminate_xml_parsed_conf();
 }
 /****************************************************************************/

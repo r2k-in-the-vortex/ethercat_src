@@ -25,6 +25,8 @@
 /****************************************************************************/
 int main (int argc, char **argv){
     ethercat_configure(argv[1], NULL);
+    terminate_handler();
+    terminate_src();
     return 0;
 }
 int main2(int argc, char **argv)

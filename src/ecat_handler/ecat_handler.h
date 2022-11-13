@@ -119,6 +119,8 @@ int EtherCATcyclic(int buffersize,
         int16var_call_back word_input, 
         int16var_call_back word_output);
 
+void terminate_handler();
+
 #ifdef __cplusplus
 }
 #endif
