@@ -134,6 +134,11 @@ int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
     log_trace("configonlyparam: %s", configonlyparam);
     
     ethercat_configure_byxml(xmlfilenameparam, ethercat_device_index, verbose, configonly);
+    free(enableparam);
+    free(xmlfilenameparam);
+    free(ethercat_device_indexparam);
+    free(verboseparam);
+    free(configonlyparam);
     return 0;
 }
 

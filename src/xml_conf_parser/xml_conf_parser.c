@@ -27,6 +27,13 @@
 /****************************************************************************/
 static EcatConfig *ecat_config;
 
+char *strmcpy(char *src){
+    char *dst;
+    dst = (char*)malloc((strlen(src) + 1) * sizeof(char));
+    strcpy(dst, src);
+    return dst;
+}
+
 xmlNode * getNextNodeNamed(xmlNode *start, char *name){
     xmlNode *node;
     for (node = start; node; node = node->next){
@@ -230,7 +237,8 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
         start = start->next;
     }
 
-    config->name = name;
+    config->name = malloc(strlen(name) * sizeof(char));
+    strcpy(config->name, name);
     config->Sm = Sms;
     config->RxPDO = RxPdos;
     config->TxPDO = TxPdos;
@@ -285,7 +293,7 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
     
     
     SlaveConfig *slavesConfig = (SlaveConfig*) malloc(ecat_config->slave_count * sizeof(SlaveConfig));
-    //slavesConfig = (SlaveConfig*) malloc(config->slave_count * sizeof(SlaveConfig));
+    
     uint32_t *test = &slavesConfig[0].product_revision;
 
     ecat_config->slavesConfig = slavesConfig;
@@ -310,11 +318,28 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
     return 0;
 }
 
+void terminate_pdo(EcatPdo *pdo){
+    //free(pdo->datatype);
+    //free(pdo->entryname);
+    //free(pdo->fixed);
+    //free(pdo->mandatory);
+    //free(pdo->name);
+    //free(pdo->pdotype);
+    //free(pdo->subindex);
+}
+
+void terminate_slaveconfig(SlaveConfig *s){
+    for (int i = 0; i < s->RxPdo_count;i++)terminate_pdo(&s->RxPDO[i]);
+    for (int i = 0; i < s->TxPdo_count;i++)terminate_pdo(&s->TxPDO[i]);
+    free(s->Sm);
+    free(s->RxPDO);
+    free(s->TxPDO);
+    free(s->name);
+}
+
 void terminate_xml_parsed_conf(){
     for (int i = 0; i < ecat_config->slave_count;i++){
-        free(ecat_config->slavesConfig[i].Sm);
-        free(ecat_config->slavesConfig[i].RxPDO);
-        free(ecat_config->slavesConfig[i].TxPDO);
+        terminate_slaveconfig(&ecat_config->slavesConfig[i]);
     }
     free(ecat_config->slavesConfig);
 }

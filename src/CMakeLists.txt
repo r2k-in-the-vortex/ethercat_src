@@ -1,7 +1,7 @@
 add_library(${PROJECT_NAME} SHARED ethercat_src.c)
 add_executable(${PROJECT_NAME}_test main.c)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 add_subdirectory(parser)
 add_subdirectory(xml_conf_parser)
