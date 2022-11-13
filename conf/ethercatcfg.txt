@@ -1,12 +1,13 @@
 # if enable=0 then just skipping EtherCAT entirely
 enable=1
 # xml defining ethercat slaves
-xmlfilename=/home/r2k/OpenPLC_v3/utils/ethercat_src/conf/master_config.xml
-ster_config.xml
+xmlfilename=/home/pi/OpenPLC_v3/utils/ethercat_src/conf/master_config.xml
 # index of /dev/EtherCAT0
 ethercat_device_index=0
 # verbocity flag, 0 quiet
 verbose=1
 # if set only runs thorugh the configuration without actually accessing device
-configonly=1
+configonly=0
 # end with newline
+
+

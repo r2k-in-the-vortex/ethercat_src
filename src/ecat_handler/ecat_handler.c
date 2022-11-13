@@ -271,7 +271,12 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
             log_error("PLC variable printout failed");
             return -1;
         }
-        printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        
+        sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+        
+        //printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
     }
     for (int i = 0;i < rxregistry_count;i++){
         PdoRegistryEntry pdo = RxPdoRegistry[i];
@@ -284,7 +289,12 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
             log_error("PLC variable printout failed");
             return -1;
         }
-        printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+
+        sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+
+        //printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
     }
     return 0;
 }
@@ -458,7 +468,11 @@ int EtherCATcyclic(int buffersize,
         int16var_call_back word_output){
 
     if(!config_done)return 0;
-    if(!msgonce)log_trace("enabled");
+    if(!msgonce){
+        sprintf(plcloggerbuffer, config->config_only_flag ? "EtherCAT simulation only" : "enabled");
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
     if(buffersize < rxregistry_count || buffersize < txregistry_count){
         log_error("PDO count rxregistry_count=%i or txregistry_count=%i too large for buffersize=%i increase buffer", rxregistry_count, txregistry_count, buffersize);
         return -1;
