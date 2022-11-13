@@ -78,6 +78,7 @@ static int                      init_done           = 0;
 
 static EcatConfig               *config             = NULL;
 static int                      wcincompletecounter = 0;
+static char                     tempbuf[10];
 
 // process data
 static uint8_t *domain1_pd = NULL;
@@ -274,10 +275,10 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
         }
         
         sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
-        log_trace(plcloggerbuffer);
+        //log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
         
-        //printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
     }
     for (int i = 0;i < rxregistry_count;i++){
         PdoRegistryEntry pdo = RxPdoRegistry[i];
@@ -292,10 +293,10 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
         }
 
         sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
-        log_trace(plcloggerbuffer);
+        //log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
 
-        //printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
     }
     return 0;
 }
@@ -443,7 +444,21 @@ void check_master_state(void)
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
     if (ms.al_states != master_state.al_states){
-        sprintf(plcloggerbuffer, "AL states: 0x%02X.\n", ms.al_states);
+
+        /*
+        - Bit 0: \a INIT
+        - Bit 1: \a PREOP
+        - Bit 2: \a SAFEOP
+        - Bit 3: \a OP
+        */
+        if(ms.al_states == 1)strcpy(tempbuf, "INIT");
+        else if(ms.al_states == 2)strcpy(tempbuf, "PREOP");
+        else if(ms.al_states == 2)strcpy(tempbuf, "SAFEOP");
+        else if(ms.al_states == 2)strcpy(tempbuf, "OP");
+        else if(ms.al_states == 2)sprintf(tempbuf, "0x%02X", ms.al_states);
+
+
+        sprintf(plcloggerbuffer, "AL states: %s.\n", tempbuf);
         log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
