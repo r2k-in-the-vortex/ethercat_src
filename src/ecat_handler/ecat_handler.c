@@ -430,11 +430,11 @@ void check_domain1_state(void)
         //EC_WC_COMPLETE    /**< All registered process data were exchanged. */
 
         if(ds.wc_state == 0)
-            sprintf(plcloggerbuffer, "Domain1: State EC_WC_ZERO.\n");
+            strcpy(plcloggerbuffer, "Domain1: State EC_WC_ZERO.\n");
         else if(ds.wc_state == 1)
-            sprintf(plcloggerbuffer, "Domain1: State EC_WC_INCOMPLETE.\n");
+            strcpy(plcloggerbuffer, "Domain1: State EC_WC_INCOMPLETE.\n");
         else if(ds.wc_state == 2)
-            sprintf(plcloggerbuffer, "Domain1: State EC_WC_COMPLETE.\n");
+            strcpy(plcloggerbuffer, "Domain1: State EC_WC_COMPLETE.\n");
         else 
             sprintf(plcloggerbuffer, "Domain1: State %u.\n", ds.wc_state);
 
@@ -466,13 +466,13 @@ void check_master_state(void)
         */
        
         if(ms.al_states == 1)
-            sprintf(plcloggerbuffer, "AL states: INIT.\n");
+            strcpy(plcloggerbuffer, "AL states: INIT.\n");
         else if(ms.al_states == 2)
-            sprintf(plcloggerbuffer, "AL states: PREOP.\n");
+            strcpy(plcloggerbuffer, "AL states: PREOP.\n");
         else if(ms.al_states == 4)
-            sprintf(plcloggerbuffer, "AL states: SAFEOP.\n");
+            strcpy(plcloggerbuffer, "AL states: SAFEOP.\n");
         else if(ms.al_states == 8)
-            sprintf(plcloggerbuffer, "AL states: OP.\n");
+            strcpy(plcloggerbuffer, "AL states: OP.\n");
         else 
             sprintf(plcloggerbuffer, "AL states: 0x%02X.\n", ms.al_states);
 
