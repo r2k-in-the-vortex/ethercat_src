@@ -30,7 +30,7 @@ static char *ethercat_device_indexparam;
 static char *verboseparam;
 static char *configonlyparam;
 static type_logger_callback openplc_logger = NULL;
-
+static EcatConfig config;
 
 int log_callback(char *message){ 
     if(openplc_logger != NULL)openplc_logger(message);
@@ -87,7 +87,7 @@ int ethercat_configure_byxml(char *xmlfilename, int ethercat_device_index, int v
     if (!ethercat_device_index)ethercat_device_index = 0;
     log_trace("ai.index_arg: %d", ethercat_device_index);
     
-    EcatConfig config;
+    
     config.master_index = ethercat_device_index;
     config.config_only_flag = configonly;
     
