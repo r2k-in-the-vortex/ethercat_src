@@ -78,7 +78,7 @@ static int                      init_done           = 0;
 
 static EcatConfig               *config             = NULL;
 static int                      wcincompletecounter = 0;
-static char                     tempbuf[10];
+static char                     tempbuf[20];
 
 // process data
 static uint8_t *domain1_pd = NULL;
@@ -424,7 +424,20 @@ void check_domain1_state(void)
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
     if (ds.wc_state != domain1_state.wc_state){
-        sprintf(plcloggerbuffer, "Domain1: State %u.\n", ds.wc_state);
+        //EC_WC_ZERO = 0,   /**< No registered process data were exchanged. */
+        //EC_WC_INCOMPLETE, /**< Some of the registered process data were
+        //                    exchanged. */
+        //EC_WC_COMPLETE    /**< All registered process data were exchanged. */
+
+        if(ds.wc_state == 0)
+            sprintf(plcloggerbuffer, "Domain1: State EC_WC_ZERO.\n");
+        else if(ds.wc_state == 1)
+            sprintf(plcloggerbuffer, "Domain1: State EC_WC_INCOMPLETE.\n");
+        else if(ds.wc_state == 2)
+            sprintf(plcloggerbuffer, "Domain1: State EC_WC_COMPLETE.\n");
+        else 
+            sprintf(plcloggerbuffer, "Domain1: State %u.\n", ds.wc_state);
+
         log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
@@ -451,14 +464,18 @@ void check_master_state(void)
         - Bit 2: \a SAFEOP
         - Bit 3: \a OP
         */
-        if(ms.al_states == 1)strcpy(tempbuf, "INIT");
-        else if(ms.al_states == 2)strcpy(tempbuf, "PREOP");
-        else if(ms.al_states == 4)strcpy(tempbuf, "SAFEOP");
-        else if(ms.al_states == 8)strcpy(tempbuf, "OP");
-        else sprintf(tempbuf, "0x%02X", ms.al_states);
+       
+        if(ms.al_states == 1)
+            sprintf(plcloggerbuffer, "AL states: INIT.\n");
+        else if(ms.al_states == 2)
+            sprintf(plcloggerbuffer, "AL states: PREOP.\n");
+        else if(ms.al_states == 4)
+            sprintf(plcloggerbuffer, "AL states: SAFEOP.\n");
+        else if(ms.al_states == 8)
+            sprintf(plcloggerbuffer, "AL states: OP.\n");
+        else 
+            sprintf(plcloggerbuffer, "AL states: 0x%02X.\n", ms.al_states);
 
-
-        sprintf(plcloggerbuffer, "AL states: %s.\n", tempbuf);
         log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
