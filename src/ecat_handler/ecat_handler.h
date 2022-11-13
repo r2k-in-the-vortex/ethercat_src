@@ -104,9 +104,12 @@ extern "C"{
 typedef u_int8_t *(*boolvar_call_back) (int, int);
 typedef u_int8_t *(*int8var_call_back) (int);
 typedef u_int16_t *(*int16var_call_back) (int);
+typedef int logger_callback(char*);
+
 
 /* set up ethercat comms */
-int EtherCATinit(EcatConfig *config);
+int EtherCATinit(EcatConfig *config, logger_callback logger);
+
 /* run cyclic task forever */
 int EtherCATcyclic(int buffersize, 
         boolvar_call_back bool_input, 

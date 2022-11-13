@@ -29,6 +29,13 @@ static char *xmlfilenameparam;
 static char *ethercat_device_indexparam;
 static char *verboseparam;
 static char *configonlyparam;
+static type_logger_callback openplc_logger = NULL;
+
+
+int log_callback(char *message){ 
+    if(openplc_logger != NULL)openplc_logger(message);
+    return 0;
+}
 
 int checkforparam(char *line, char *prefix, char **dataout){
     int len = strlen(prefix);
@@ -72,14 +79,14 @@ int ethercat_configure_byxml(char *xmlfilename, int ethercat_device_index, int v
     if(verbose){
         log_trace("TRACE output");
         log_set_level(0);
-    }
+    } 
 
     log_trace("ai.filename_arg: %s", xmlfilename);
     log_trace("ai.verbose_flag: %d", verbose);
     log_trace("ai.confonly_flag: %d", configonly);
     if (!ethercat_device_index)ethercat_device_index = 0;
     log_trace("ai.index_arg: %d", ethercat_device_index);
-
+    
     EcatConfig config;
     config.master_index = ethercat_device_index;
     config.config_only_flag = configonly;
@@ -89,10 +96,11 @@ int ethercat_configure_byxml(char *xmlfilename, int ethercat_device_index, int v
         return -1;
     }
 
-    EtherCATinit(&config);
+    EtherCATinit(&config, &log_callback);
     return ret;
 }
-int ethercat_configure(char *paramsfile){
+int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
+    openplc_logger = logfptr;
     log_trace("reading file '%s'", paramsfile);
     log_set_level(0);
     FILE *fp;

@@ -24,7 +24,7 @@
 #include "ethercat_src.h"
 /****************************************************************************/
 int main (int argc, char **argv){
-    ethercat_configure(argv[1]);
+    ethercat_configure(argv[1], NULL);
     return 0;
 }
 int main2(int argc, char **argv)
@@ -56,7 +56,7 @@ int main2(int argc, char **argv)
         return -1;
     }
 
-    EtherCATinit(&config);
+    EtherCATinit(&config, NULL);
 
 
     return ret;

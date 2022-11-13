@@ -62,6 +62,8 @@ static ec_pdo_entry_info_t      *rx_entries         = NULL;
 static ec_pdo_info_t            *rx_pdos            = NULL;
 static ec_pdo_entry_info_t      *tx_entries         = NULL;
 static ec_pdo_info_t            *tx_pdos            = NULL;
+static logger_callback          *plclogger          = NULL;
+static char                     plcloggerbuffer[1024];
 
 
 static int                      rxregistry_count    = 0;
@@ -287,7 +289,10 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
     return 0;
 }
 /****************************************************************************/
-int EtherCATinit(EcatConfig *configin){
+int EtherCATinit(EcatConfig *configin, logger_callback logger){
+    plclogger = logger;
+
+    if(plclogger != NULL)plclogger("Configuring EtherCAT\n");
     config = configin;
     config_done = 0;
     unsigned int ver = ecrt_version_magic();
@@ -400,10 +405,16 @@ void check_domain1_state(void)
 
     ecrt_domain_state(domain1, &ds);
 
-    if (ds.working_counter != domain1_state.working_counter)
-        log_trace("Domain1: WC %u.\n", ds.working_counter);
-    if (ds.wc_state != domain1_state.wc_state)
-        log_trace("Domain1: State %u.\n", ds.wc_state);
+    if (ds.working_counter != domain1_state.working_counter){
+        sprintf(plcloggerbuffer, "Domain1: WC %u.\n", ds.working_counter);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
+    if (ds.wc_state != domain1_state.wc_state){
+        sprintf(plcloggerbuffer, "Domain1: State %u.\n", ds.wc_state);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
 
     domain1_state = ds;
 }
@@ -414,12 +425,21 @@ void check_master_state(void)
 
     ecrt_master_state(master, &ms);
 
-    if (ms.slaves_responding != master_state.slaves_responding)
-        printf("%u slave(s).\n", ms.slaves_responding);
-    if (ms.al_states != master_state.al_states)
-        printf("AL states: 0x%02X.\n", ms.al_states);
-    if (ms.link_up != master_state.link_up)
-        printf("Link is %s.\n", ms.link_up ? "up" : "down");
+    if (ms.slaves_responding != master_state.slaves_responding){
+        sprintf(plcloggerbuffer, "%u slave(s).\n", ms.slaves_responding);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
+    if (ms.al_states != master_state.al_states){
+        sprintf(plcloggerbuffer, "AL states: 0x%02X.\n", ms.al_states);
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
+    if (ms.link_up != master_state.link_up){
+        sprintf(plcloggerbuffer, "Link is %s.\n", ms.link_up ? "up" : "down");
+        log_trace(plcloggerbuffer);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
+    }
 
     master_state = ms;
 }

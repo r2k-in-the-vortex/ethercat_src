@@ -7,8 +7,9 @@ extern "C"{
 typedef u_int8_t *(*boolvar_call_back) (int, int);
 typedef u_int8_t *(*int8var_call_back) (int);
 typedef u_int16_t *(*int16var_call_back) (int);
+typedef void (*type_logger_callback) (unsigned char*);
 
-int ethercat_configure(char *paramsfile);
+int ethercat_configure(char *paramsfile, type_logger_callback);
 int ethercat_callcyclic(int buffersize, 
     boolvar_call_back bool_input, 
     boolvar_call_back bool_output, 
