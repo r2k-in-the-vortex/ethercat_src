@@ -22,9 +22,39 @@
 #include "ecat_handler.h"
 #include "log.h"
 #include "ethercat_src.h"
+
+#define BUFFER_SIZE 1024
 /****************************************************************************/
+u_int8_t shortvar = 0;
+u_int16_t longvar = 0;
+u_int8_t *bool_input_call_back(int a, int b){ return &shortvar; }
+u_int8_t *bool_output_call_back(int a, int b){ return &shortvar; }
+u_int8_t *byte_input_call_back(int a){ return &shortvar; }
+u_int8_t *byte_output_call_back(int a){ return &shortvar; }
+u_int16_t *int_input_call_back(int a){ return &longvar; }
+u_int16_t *int_output_call_back(int a){ return &longvar; }
+void logger_callbackf(unsigned char *msg){ log_trace(msg); }
+
 int main (int argc, char **argv){
-    ethercat_configure(argv[1], NULL);
+    type_logger_callback logger = logger_callbackf; 
+    ethercat_configure(argv[1], logger);
+    boolvar_call_back bool_input_callback = bool_input_call_back;
+    boolvar_call_back bool_output_callback = bool_output_call_back;
+    int8var_call_back byte_input_callback = byte_input_call_back;
+    int8var_call_back byte_output_callback = byte_output_call_back;
+    int16var_call_back int_input_callback = int_input_call_back;
+    int16var_call_back int_output_callback = int_output_call_back;
+
+    for (int i = 0; i < 10; i++){
+        ethercat_callcyclic(BUFFER_SIZE, 
+            bool_input_callback, 
+            bool_output_callback, 
+            byte_input_callback, 
+            byte_output_callback, 
+            int_input_callback, 
+            int_output_callback);
+    }
+
     terminate_handler();
     terminate_src();
     return 0;

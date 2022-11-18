@@ -275,7 +275,11 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
     xmlDoc         *document;
     xmlNode        *root, *first_child, *node;
 
-    document = xmlReadFile(filename, NULL, 0);
+    document = xmlReadFile(filename, NULL, XML_PARSE_PEDANTIC);
+    if(!document){
+        log_error("Reading file failed, fp NULL");
+        return -1;
+    }
     root = xmlDocGetRootElement(document);
 
     char expectedRootName[] = "EtherCATInfoList"; 

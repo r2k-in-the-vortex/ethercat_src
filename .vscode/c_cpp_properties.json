@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/libxml2"
+                "/usr/include/libxml2/",
+                "/usr/include/libxml2/libxml/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
