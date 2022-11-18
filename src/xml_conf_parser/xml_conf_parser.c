@@ -159,19 +159,19 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
     pdo->pdotype = node->name;
     char *sm = getAttributeValueNamed(node, "Sm");
     pdo->sm = (uint16_t)strtol(sm, &ptr, 10);
-    pdo->fixed = getAttributeValueNamed(node, "Fixed");
-    pdo->mandatory = getAttributeValueNamed(node, "Mandatory");
+    pdo->fixed = strmcpy(getAttributeValueNamed(node, "Fixed"));
+    pdo->mandatory = strmcpy(getAttributeValueNamed(node, "Mandatory"));
     char *index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
     pdo->index = (uint16_t)hexstrtoint32(index);
-    pdo->name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
+    pdo->name = strmcpy(getNodeTextContent(getSingularnodeNamed(node->children, "Name")));
     entry = getSingularnodeNamed(node->children, "Entry");
     char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
     pdo->entryindex = (uint16_t)hexstrtoint32(entryindex);
-    pdo->subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+    pdo->subindex = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex")));
     char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
     pdo->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
-    pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
-    pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
+    pdo->entryname = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "Name")));
+    pdo->datatype = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "DataType")));
     log_trace("%s %i %s %s 0x%X %s 0x%X %s %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
@@ -237,8 +237,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
         start = start->next;
     }
 
-    config->name = malloc(strlen(name) * sizeof(char));
-    strcpy(config->name, name);
+    config->name = strmcpy(name);
     config->Sm = Sms;
     config->RxPDO = RxPdos;
     config->TxPDO = TxPdos;
