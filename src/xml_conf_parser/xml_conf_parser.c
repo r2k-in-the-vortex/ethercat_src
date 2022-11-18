@@ -156,7 +156,7 @@ int ParseSm(xmlNode *node, EcatSm *sm){
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
     char *ptr;
     xmlNode *entry;
-    pdo->pdotype = node->name;
+    pdo->pdotype = strmcpy((char *)node->name);
     char *sm = getAttributeValueNamed(node, "Sm");
     pdo->sm = (uint16_t)strtol(sm, &ptr, 10);
     pdo->fixed = strmcpy(getAttributeValueNamed(node, "Fixed"));
@@ -322,13 +322,13 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
 }
 
 void terminate_pdo(EcatPdo *pdo){
-    //free(pdo->datatype);
-    //free(pdo->entryname);
-    //free(pdo->fixed);
-    //free(pdo->mandatory);
-    //free(pdo->name);
-    //free(pdo->pdotype);
-    //free(pdo->subindex);
+    free(pdo->datatype);
+    free(pdo->entryname);
+    free(pdo->fixed);
+    free(pdo->mandatory);
+    free(pdo->name);
+    free(pdo->pdotype);
+    free(pdo->subindex);
 }
 
 void terminate_slaveconfig(SlaveConfig *s){
