@@ -5,5 +5,7 @@
         "log.h": "c",
         "ecat_handler.h": "c",
         "xml_conf_parser.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "${workspaceFolder}/.",
+    "cmake.buildDirectory": "${workspaceFolder}/build"
 }

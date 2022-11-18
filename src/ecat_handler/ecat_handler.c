@@ -57,11 +57,11 @@ static int                      TxPdoRegistry_idx   = 0;
 static ec_slave_config_t        **sc_slaves         = NULL;
 static ec_slave_config_state_t  **sc_salves_states  = NULL;
 
-static ec_sync_info_t           *slave_syncs        = NULL;
-static ec_pdo_entry_info_t      *rx_entries         = NULL;
-static ec_pdo_info_t            *rx_pdos            = NULL;
-static ec_pdo_entry_info_t      *tx_entries         = NULL;
-static ec_pdo_info_t            *tx_pdos            = NULL;
+static ec_sync_info_t           **slave_syncs       = NULL;
+static ec_pdo_entry_info_t      **rx_entries        = NULL;
+static ec_pdo_info_t            **rx_pdos           = NULL;
+static ec_pdo_entry_info_t      **tx_entries        = NULL;
+static ec_pdo_info_t            **tx_pdos           = NULL;
 static logger_callback          *plclogger          = NULL;
 static char                     plcloggerbuffer[1024];
 
@@ -139,37 +139,41 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     }
     // cofigure pdo-s
 
-    //ec_sync_info_t slave_syncs[slave->sm_count + 1];
-    slave_syncs = (ec_sync_info_t*) malloc((slave->sm_count + 1) * sizeof(ec_sync_info_t));
-    //ec_pdo_entry_info_t rx_entries[slave->RxPdo_count];
-    rx_entries = (ec_pdo_entry_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_entry_info_t));
-    //ec_pdo_info_t rx_pdos[slave->RxPdo_count];
-    rx_pdos = (ec_pdo_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_info_t));
-    //ec_pdo_entry_info_t tx_entries[slave->TxPdo_count];
-    tx_entries = (ec_pdo_entry_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_entry_info_t));
-    //ec_pdo_info_t tx_pdos[slave->TxPdo_count];
-    tx_pdos = (ec_pdo_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_info_t));
+    ec_sync_info_t *ss = (ec_sync_info_t*) malloc((slave->sm_count + 1) * sizeof(ec_sync_info_t));
+    slave_syncs[slave->position] = ss;
+
+    ec_pdo_entry_info_t *rxe = (ec_pdo_entry_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_entry_info_t));
+    rx_entries[slave->position] = rxe;
+
+    ec_pdo_info_t *rxp = (ec_pdo_info_t*) malloc(slave->RxPdo_count * sizeof(ec_pdo_info_t));
+    rx_pdos[slave->position] = rxp;
+
+    ec_pdo_entry_info_t *txe = (ec_pdo_entry_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_entry_info_t));
+    tx_entries[slave->position] = txe;
+
+    ec_pdo_info_t *txp = (ec_pdo_info_t*) malloc(slave->TxPdo_count * sizeof(ec_pdo_info_t));
+    tx_pdos[slave->position] = txp;
 
 
-    slave_syncs[slave->sm_count] = (ec_sync_info_t){0xff};  // list termination
+    ss[slave->sm_count] = (ec_sync_info_t){0xff};  // list termination
     for (int i = 0;i < slave->sm_count;i++) {
-        slave_syncs[i].index    = i;       // indexes
-        slave_syncs[i].n_pdos   = 0;       // to be counted
+        ss[i].index    = i;       // indexes
+        ss[i].n_pdos   = 0;       // to be counted
     }
 
     // rx pdos
     for (int i = 0;i < slave->RxPdo_count;i++){
         EcatPdo rxpdo = slave->RxPDO[i];
-        rx_entries[i].subindex = i + 1;
-        rx_entries[i].index = rxpdo.entryindex;
-        rx_entries[i].bit_length = rxpdo.bitlen;
-        rx_pdos[i].entries = &rx_entries[i];
-        rx_pdos[i].index = rxpdo.index;
-        rx_pdos[i].n_entries = 1;
-        slave_syncs[rxpdo.sm].dir = EC_DIR_OUTPUT;
-        slave_syncs[rxpdo.sm].n_pdos++;
-        slave_syncs[rxpdo.sm].pdos = rx_pdos;
-        if(RegisterRxInDomain(slave, &rx_entries[i], &rxpdo)){
+        rxe[i].subindex = i + 1;
+        rxe[i].index = rxpdo.entryindex;
+        rxe[i].bit_length = rxpdo.bitlen;
+        rxp[i].entries = &rxe[i];
+        rxp[i].index = rxpdo.index;
+        rxp[i].n_entries = 1;
+        ss[rxpdo.sm].dir = EC_DIR_OUTPUT;
+        ss[rxpdo.sm].n_pdos++;
+        ss[rxpdo.sm].pdos = rxp;
+        if(RegisterRxInDomain(slave, &rxe[i], &rxpdo)){
             log_error("Failed to register RxPDO in domain");
             return -1;
         }
@@ -178,16 +182,16 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     // tx pdos
     for (int i = 0;i < slave->TxPdo_count;i++){
         EcatPdo txpdo = slave->TxPDO[i];
-        tx_entries[i].subindex = i + 1;
-        tx_entries[i].index = txpdo.entryindex;
-        tx_entries[i].bit_length = txpdo.bitlen;
-        tx_pdos[i].entries = &tx_entries[i];
-        tx_pdos[i].index = txpdo.index;
-        tx_pdos[i].n_entries = 1;
-        slave_syncs[txpdo.sm].dir = EC_DIR_INPUT;
-        slave_syncs[txpdo.sm].n_pdos++;
-        slave_syncs[txpdo.sm].pdos = tx_pdos;
-        if(RegisterTxInDomain(slave, &tx_entries[i], &txpdo)){
+        txe[i].subindex = i + 1;
+        txe[i].index = txpdo.entryindex;
+        txe[i].bit_length = txpdo.bitlen;
+        txp[i].entries = &txe[i];
+        txp[i].index = txpdo.index;
+        txp[i].n_entries = 1;
+        ss[txpdo.sm].dir = EC_DIR_INPUT;
+        ss[txpdo.sm].n_pdos++;
+        ss[txpdo.sm].pdos = txp;
+        if(RegisterTxInDomain(slave, &txe[i], &txpdo)){
             log_error("Failed to register TxPDO in domain");
             return -1;
         }
@@ -195,23 +199,23 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
 
     for (int i = 0; i < slave->sm_count;i++){
         char *dir = "[error invalid direction]";
-        if (slave_syncs[i].dir == EC_DIR_INPUT)dir = "EC_DIR_INPUT";
-        if (slave_syncs[i].dir == EC_DIR_OUTPUT)dir = "EC_DIR_OUTPUT";
+        if (ss[i].dir == EC_DIR_INPUT)dir = "EC_DIR_INPUT";
+        if (ss[i].dir == EC_DIR_OUTPUT)dir = "EC_DIR_OUTPUT";
         log_trace("Sync master %i %s", i, dir);
-        for (int j = 0; j < slave_syncs[i].n_pdos; j++){
+        for (int j = 0; j < ss[i].n_pdos; j++){
             log_trace("PDO index %i/%i  0x%4X entryindex 0x%4X subindex %i bitlen %i", 
                 j + 1,
-                slave_syncs[i].n_pdos,
-                slave_syncs[i].pdos[j].index, 
-                slave_syncs[i].pdos[j].entries[0].index, 
-                slave_syncs[i].pdos[j].entries[0].subindex, 
-                slave_syncs[i].pdos[j].entries[0].bit_length);
+                ss[i].n_pdos,
+                ss[i].pdos[j].index, 
+                ss[i].pdos[j].entries[0].index, 
+                ss[i].pdos[j].entries[0].subindex, 
+                ss[i].pdos[j].entries[0].bit_length);
         }
     }
 
     if (!config->config_only_flag){
 
-        if (ecrt_slave_config_pdos(sc, EC_END, slave_syncs)){
+        if (ecrt_slave_config_pdos(sc, EC_END, ss)){
             log_error("Failed to configure PDO-s");
             return -1;
         }
@@ -348,7 +352,23 @@ int EtherCATinit(EcatConfig *configin, logger_callback logger){
     
     sc_slaves = (ec_slave_config_t**) malloc(config->slave_count * sizeof(ec_slave_config_t*));
     sc_salves_states = (ec_slave_config_state_t**) malloc(config->slave_count * sizeof(ec_slave_config_state_t*));
-    if (sc_slaves == NULL || sc_salves_states == NULL || domain1_regs == NULL){
+
+    slave_syncs = (ec_sync_info_t**) malloc(config->slave_count * sizeof(ec_sync_info_t*));
+    rx_entries = (ec_pdo_entry_info_t**) malloc(config->slave_count * sizeof(ec_pdo_entry_info_t*));
+    rx_pdos = (ec_pdo_info_t**) malloc(config->slave_count * sizeof(ec_pdo_info_t*));
+    tx_entries = (ec_pdo_entry_info_t**) malloc(config->slave_count * sizeof(ec_pdo_entry_info_t*));
+    tx_pdos = (ec_pdo_info_t**) malloc(config->slave_count * sizeof(ec_pdo_info_t*));
+
+
+    if (sc_slaves == NULL || 
+    sc_salves_states == NULL || 
+    domain1_regs == NULL || 
+    slave_syncs == NULL || 
+    rx_entries == NULL || 
+    rx_pdos == NULL || 
+    tx_entries == NULL || 
+    tx_pdos == NULL
+    ){
         log_error("Failed to alloc");
         goto out_release_master;
     }
@@ -583,6 +603,13 @@ int EtherCATcyclic(int buffersize,
 
 // after 
 void terminate_handler(){
+    for (int i = 0; i < config->slave_count; i++){
+        free(slave_syncs[i]);
+        free(rx_entries[i]);
+        free(rx_pdos[i]);
+        free(tx_entries[i]);
+        free(tx_pdos[i]);
+    }
     free(domain1_regs);
     free(RxPdoRegistry);
     free(TxPdoRegistry);
