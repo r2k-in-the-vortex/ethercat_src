@@ -263,12 +263,12 @@ int NameTypeAndPrefix(PdoRegistryEntry *pdo, char *name, char *prefix, char *dty
 
 int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
 
-    log_info("PLC IO Printout, copy this to VAR..END_VAR of main program or something");
-    log_info("Variable names may be modified at will as long as the adresses and variable sizes remain the same");
+    plclogger("PLC IO Printout, copy this to VAR..END_VAR of main program or something\n");
+    plclogger("Variable names may be modified at will as long as the adresses and variable sizes remain the same\n");
     
     for (int i = 0;i < txregistry_count;i++){
         PdoRegistryEntry pdo = TxPdoRegistry[i];
-        //Output1 AT %QX0.0 : BOOL;
+        //Input1 AT %IX0.0 : BOOL;
         char name[strlen(pdo.pdoname)];
         char dtype[10];
         char prefix[10];
@@ -279,10 +279,8 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
         }
         
         sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
-        //log_trace(plcloggerbuffer);
-        if(plclogger != NULL)plclogger(plcloggerbuffer);
         
-        printf("Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        if(plclogger != NULL)plclogger(plcloggerbuffer);
     }
     for (int i = 0;i < rxregistry_count;i++){
         PdoRegistryEntry pdo = RxPdoRegistry[i];
@@ -296,11 +294,9 @@ int PlcInputOutputPrintout(int rxregistry_count, int txregistry_count){
             return -1;
         }
 
-        sprintf(plcloggerbuffer, "Slave%i_%s AT %%I%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
-        //log_trace(plcloggerbuffer);
+        sprintf(plcloggerbuffer, "Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
+        
         if(plclogger != NULL)plclogger(plcloggerbuffer);
-
-        printf("Slave%i_%s AT %%Q%s%i.0 : %s; %s\n", pdo.slaveposition, name, prefix, pdo.pdoidx, dtype, comment);
     }
     return 0;
 }
@@ -506,7 +502,7 @@ int EtherCATcyclic(int buffersize,
 
     if(!config_done)return 0;
     if(!msgonce){
-        sprintf(plcloggerbuffer, config->config_only_flag ? "EtherCAT simulation only" : "enabled");
+        sprintf(plcloggerbuffer, config->config_only_flag ? "EtherCAT simulation only\n" : "enabled\n");
         log_trace(plcloggerbuffer);
         if(plclogger != NULL)plclogger(plcloggerbuffer);
     }

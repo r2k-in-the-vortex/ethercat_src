@@ -33,7 +33,7 @@ u_int8_t *byte_input_call_back(int a){ return &shortvar; }
 u_int8_t *byte_output_call_back(int a){ return &shortvar; }
 u_int16_t *int_input_call_back(int a){ return &longvar; }
 u_int16_t *int_output_call_back(int a){ return &longvar; }
-void logger_callbackf(unsigned char *msg){ log_trace(msg); }
+void logger_callbackf(unsigned char *msg){ printf("PLC log: %s", msg); }
 
 int main (int argc, char **argv){
     type_logger_callback logger = logger_callbackf; 
