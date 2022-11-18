@@ -5,7 +5,7 @@ xmlfilename=conf/master_config.xml
 # index of /dev/EtherCAT0
 ethercat_device_index=0
 # verbocity flag, 0 quiet
-verbose=0
+verbose=1
 # if set only runs thorugh the configuration without actually accessing device
 configonly=1
 # end with newline

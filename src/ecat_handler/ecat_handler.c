@@ -378,6 +378,7 @@ int EtherCATinit(EcatConfig *configin, logger_callback logger){
     for (int i = 0; i < config->slave_count; i++) {
         SlaveConfig *slave = &config->slavesConfig[i];
         slave->position = i;
+        slave->alias = 0;
         if (ConfigureSlave(config, slave, sc_slaves[i])){
             log_error("Failed to configure slave");
             goto out_release_master;

@@ -119,7 +119,7 @@ int ParseDeviceType(xmlNode *typedata, SlaveConfig *config){
     config->product_code = hexstrtoint32(strproductcode);
     config->product_revision = hexstrtoint32(strrevisionNo);
 
-    config->type = getNodeTextContent(typedata);
+    config->type = strmcpy(getNodeTextContent(typedata));
     log_trace("%s product code 0x%08X, rev 0x%08X", config->type, config->product_code, config->product_revision);
     return 0;
 }
@@ -338,6 +338,7 @@ void terminate_slaveconfig(SlaveConfig *s){
     free(s->RxPDO);
     free(s->TxPDO);
     free(s->name);
+    free(s->type);
 }
 
 void terminate_xml_parsed_conf(){
