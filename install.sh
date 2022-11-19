@@ -1,3 +1,3 @@
 sh ./build.sh
-cmake --install build/
-/sbin/ldconfig -v | grep ethercat
+sudo cmake --install build/
+sudo /sbin/ldconfig -v | grep ethercat

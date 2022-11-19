@@ -598,8 +598,9 @@ int EtherCATcyclic(int buffersize,
     return 0;
 }
 
-// after 
+// cleanup after 
 void terminate_handler(){
+    if(config == NULL)return;
     for (int i = 0; i < config->slave_count; i++){
         free(slave_syncs[i]);
         free(rx_entries[i]);

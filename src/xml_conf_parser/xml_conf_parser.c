@@ -342,6 +342,7 @@ void terminate_slaveconfig(SlaveConfig *s){
 }
 
 void terminate_xml_parsed_conf(){
+    if(ecat_config == NULL)return;
     for (int i = 0; i < ecat_config->slave_count;i++){
         terminate_slaveconfig(&ecat_config->slavesConfig[i]);
     }
