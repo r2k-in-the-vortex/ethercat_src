@@ -55,7 +55,7 @@ int main (int argc, char **argv){
             int_output_callback);
     }
 
-    terminate_src();
+    ethercat_terminate_src();
     return 0;
 }
 

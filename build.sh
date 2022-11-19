@@ -1,3 +1,5 @@
 mkdir -p build
+cp -n conf/ethercatcfg.txt build/ethercatcfg.txt
+cp -n conf/master_config.xml build/master_config.xml
 cmake -S . -B build/
 cmake --build build/

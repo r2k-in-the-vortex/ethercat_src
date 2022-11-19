@@ -17,7 +17,7 @@ int ethercat_callcyclic(int buffersize,
     int8var_call_back byte_output, 
     int16var_call_back word_input, 
     int16var_call_back word_output);
-void terminate_src();
+void ethercat_terminate_src();
 #ifdef __cplusplus
 }
 #endif

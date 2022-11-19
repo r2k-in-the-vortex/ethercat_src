@@ -155,7 +155,7 @@ int ethercat_callcyclic(int buffersize,
     return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output);
 }
 
-void terminate_src(){
+void ethercat_terminate_src(){
     terminate_handler();
     terminate_xml_parsed_conf();
 }
