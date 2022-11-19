@@ -1,11 +1,11 @@
 {
-    "cmake.generator": "MinGW Makefiles",
     "files.associations": {
         "ecrt.h": "c",
         "log.h": "c",
         "ecat_handler.h": "c",
         "xml_conf_parser.h": "c"
     },
+    "cmake.cmakePath": "cmake",
     "cmake.sourceDirectory": "${workspaceFolder}/.",
     "cmake.buildDirectory": "${workspaceFolder}/build"
 }

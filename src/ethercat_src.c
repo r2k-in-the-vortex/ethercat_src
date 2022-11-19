@@ -156,6 +156,7 @@ int ethercat_callcyclic(int buffersize,
 }
 
 void terminate_src(){
+    terminate_handler();
     terminate_xml_parsed_conf();
 }
 /****************************************************************************/

@@ -17,7 +17,6 @@
 /****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include "cmdline.h"
 #include "xml_conf_parser.h"
 #include "ecat_handler.h"
 #include "log.h"
@@ -25,14 +24,15 @@
 
 #define BUFFER_SIZE 1024
 /****************************************************************************/
-u_int8_t shortvar = 0;
-u_int16_t longvar = 0;
-u_int8_t *bool_input_call_back(int a, int b){ return &shortvar; }
-u_int8_t *bool_output_call_back(int a, int b){ return &shortvar; }
-u_int8_t *byte_input_call_back(int a){ return &shortvar; }
-u_int8_t *byte_output_call_back(int a){ return &shortvar; }
-u_int16_t *int_input_call_back(int a){ return &longvar; }
-u_int16_t *int_output_call_back(int a){ return &longvar; }
+
+uint8_t shortvar = 0;
+uint16_t longvar = 0;
+uint8_t *bool_input_call_back(int a, int b){ return &shortvar; }
+uint8_t *bool_output_call_back(int a, int b){ return &shortvar; }
+uint8_t *byte_input_call_back(int a){ return &shortvar; }
+uint8_t *byte_output_call_back(int a){ return &shortvar; }
+uint16_t *int_input_call_back(int a){ return &longvar; }
+uint16_t *int_output_call_back(int a){ return &longvar; }
 void logger_callbackf(unsigned char *msg){ printf("PLC log: %s", msg); }
 
 int main (int argc, char **argv){
@@ -55,43 +55,8 @@ int main (int argc, char **argv){
             int_output_callback);
     }
 
-    terminate_handler();
     terminate_src();
     return 0;
-}
-int main2(int argc, char **argv)
-{
-    int ret = 0;
-    struct gengetopt_args_info ai;
-    if (cmdline_parser(argc, argv, &ai) != 0) {
-        exit(1);
-    }
-    log_set_level(1);
-    // set verbose output DEBUG
-    if(ai.verbose_flag){
-        log_trace("TRACE output");
-        log_set_level(0);
-    }
-
-    log_trace("ai.filename_arg: %s", ai.filename_arg);
-    log_trace("ai.verbose_flag: %d", ai.verbose_flag);
-    log_trace("ai.confonly_flag: %d", ai.confonly_flag);
-    if (!ai.index_given)ai.index_arg = 0;
-    log_trace("ai.index_arg: %d", ai.index_arg);
-
-    EcatConfig config;
-    config.master_index = ai.index_arg;
-    config.config_only_flag = ai.confonly_flag;
-    
-    if(parse_xml_config(ai.filename_arg, &config)){
-        log_error("failed to parse configuration file");
-        return -1;
-    }
-
-    EtherCATinit(&config, NULL);
-
-
-    return ret;
 }
 
 /****************************************************************************/
