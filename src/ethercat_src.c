@@ -119,7 +119,6 @@ int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
         free(line);
     }
     else{
-        fclose(fp);
         log_error("Failed to open file '%s'", paramsfile);
         return -1;
     }
