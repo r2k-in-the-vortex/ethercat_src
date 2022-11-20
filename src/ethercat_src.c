@@ -155,10 +155,12 @@ int ethercat_callcyclic(int buffersize,
 }
 
 int ethercat_read_sdo(){
+    printf("calling ethercat_read_sdo()\n");
     return 7;
 }
 
 int ethercat_write_sdo(){
+    printf("calling ethercat_write_sdo()\n");
     return 7;
 }
 
