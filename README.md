@@ -15,7 +15,7 @@ ethercat_src can be built and installed independently of OpenPLC but is meant to
 Reference hardware is Raspberry pi 4
 
 Some dependancies should be checked to exist
-````bash
+```bash
 sudo apt-get install udev
 sudo apt-get install libxml2-dev
 ```
