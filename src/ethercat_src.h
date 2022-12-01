@@ -9,7 +9,10 @@ typedef u_int8_t *(*int8var_call_back) (int);
 typedef u_int16_t *(*int16var_call_back) (int);
 typedef void (*type_logger_callback) (unsigned char*);
 
+// Setup before realtime
 int ethercat_configure(char *paramsfile, type_logger_callback);
+
+// Realtime data exchange
 int ethercat_callcyclic(int buffersize, 
     boolvar_call_back bool_input, 
     boolvar_call_back bool_output, 
@@ -17,7 +20,14 @@ int ethercat_callcyclic(int buffersize,
     int8var_call_back byte_output, 
     int16var_call_back word_input, 
     int16var_call_back word_output);
-void terminate_src();
+    
+// CoE access
+int ethercat_read_sdo();
+int ethercat_write_sdo();
+
+// Clean up resources
+void ethercat_terminate_src();
+
 #ifdef __cplusplus
 }
 #endif

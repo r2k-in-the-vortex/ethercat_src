@@ -18,6 +18,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 
 
 
-
 # defines targets and sources
 add_subdirectory(src)

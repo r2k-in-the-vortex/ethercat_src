@@ -16,7 +16,7 @@ struct _PdoRegistryEntry{
     unsigned char       *slavetype;                         // slave type
     unsigned int        bitlength;                          // number of bits
     unsigned int        pdoidx;                             // registry PDO index, use this to link PLC
-    const char          *pdoname;                           // pdo name, example 'Channel 6'
+    char                *pdoname;                           // pdo name, example 'Channel 6'
 };
 
 /**
@@ -42,17 +42,17 @@ struct _EcatSm{
 typedef struct _EcatPdo EcatPdo;
 typedef EcatPdo *EcatPdoPtr;
 struct _EcatPdo{
-    const char          *pdotype;                           // RxPdo or TxPdo
+    char                *pdotype;                           // RxPdo or TxPdo
     uint16_t            sm;                                 // sm index
-    const char          *fixed;                             // fixed attr
-    const char          *mandatory;                         // mandatory attr
+    char                *fixed;                             // fixed attr
+    char                *mandatory;                         // mandatory attr
     uint16_t            index;                              // pdo index
-    const char          *name;                              // pdo name
+    char                *name;                              // pdo name
     uint16_t            entryindex;                         // entry index
-    const char          *subindex;                          // entry subindex
+    char                *subindex;                          // entry subindex
     uint8_t             bitlen;                             // bit length, 1, 8, 16, 32
-    const char          *entryname;                         // entryname, arbritary, usually Input/Output, but can be descriptive
-    const char          *datatype;                          // datatype, BOOL for bitlen 1, others...
+    char                *entryname;                         // entryname, arbritary, usually Input/Output, but can be descriptive
+    char                *datatype;                          // datatype, BOOL for bitlen 1, others...
 };
 
 /**

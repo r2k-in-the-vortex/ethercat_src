@@ -100,6 +100,9 @@ int ethercat_configure_byxml(char *xmlfilename, int ethercat_device_index, int v
     return ret;
 }
 int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
+    if(paramsfile == NULL){
+        log_error("Params file NULL");
+    }
     openplc_logger = logfptr;
     log_trace("reading file '%s'", paramsfile);
     log_set_level(0);
@@ -116,7 +119,6 @@ int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
         free(line);
     }
     else{
-        fclose(fp);
         log_error("Failed to open file '%s'", paramsfile);
         return -1;
     }
@@ -152,7 +154,19 @@ int ethercat_callcyclic(int buffersize,
     return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output);
 }
 
-void terminate_src(){
+int ethercat_read_sdo(){
+    printf("calling ethercat_read_sdo()\n");
+    return 7;
+}
+
+int ethercat_write_sdo(){
+    printf("calling ethercat_write_sdo()\n");
+    return 7;
+}
+
+/* Close all resources */
+void ethercat_terminate_src(){
+    terminate_handler();
     terminate_xml_parsed_conf();
 }
 /****************************************************************************/

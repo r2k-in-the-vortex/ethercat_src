@@ -119,7 +119,7 @@ int ParseDeviceType(xmlNode *typedata, SlaveConfig *config){
     config->product_code = hexstrtoint32(strproductcode);
     config->product_revision = hexstrtoint32(strrevisionNo);
 
-    config->type = getNodeTextContent(typedata);
+    config->type = strmcpy(getNodeTextContent(typedata));
     log_trace("%s product code 0x%08X, rev 0x%08X", config->type, config->product_code, config->product_revision);
     return 0;
 }
@@ -156,22 +156,22 @@ int ParseSm(xmlNode *node, EcatSm *sm){
 int ParsePdo(xmlNode *node, EcatPdo *pdo){
     char *ptr;
     xmlNode *entry;
-    pdo->pdotype = node->name;
+    pdo->pdotype = strmcpy((char *)node->name);
     char *sm = getAttributeValueNamed(node, "Sm");
     pdo->sm = (uint16_t)strtol(sm, &ptr, 10);
-    pdo->fixed = getAttributeValueNamed(node, "Fixed");
-    pdo->mandatory = getAttributeValueNamed(node, "Mandatory");
+    pdo->fixed = strmcpy(getAttributeValueNamed(node, "Fixed"));
+    pdo->mandatory = strmcpy(getAttributeValueNamed(node, "Mandatory"));
     char *index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
     pdo->index = (uint16_t)hexstrtoint32(index);
-    pdo->name = getNodeTextContent(getSingularnodeNamed(node->children, "Name"));
+    pdo->name = strmcpy(getNodeTextContent(getSingularnodeNamed(node->children, "Name")));
     entry = getSingularnodeNamed(node->children, "Entry");
     char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
     pdo->entryindex = (uint16_t)hexstrtoint32(entryindex);
-    pdo->subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+    pdo->subindex = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex")));
     char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
     pdo->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
-    pdo->entryname = getNodeTextContent(getSingularnodeNamed(entry->children, "Name"));
-    pdo->datatype = getNodeTextContent(getSingularnodeNamed(entry->children, "DataType"));
+    pdo->entryname = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "Name")));
+    pdo->datatype = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "DataType")));
     log_trace("%s %i %s %s 0x%X %s 0x%X %s %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
     return 0;
 }
@@ -237,8 +237,7 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
         start = start->next;
     }
 
-    config->name = malloc(strlen(name) * sizeof(char));
-    strcpy(config->name, name);
+    config->name = strmcpy(name);
     config->Sm = Sms;
     config->RxPDO = RxPdos;
     config->TxPDO = TxPdos;
@@ -275,7 +274,11 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
     xmlDoc         *document;
     xmlNode        *root, *first_child, *node;
 
-    document = xmlReadFile(filename, NULL, 0);
+    document = xmlReadFile(filename, NULL, XML_PARSE_PEDANTIC);
+    if(!document){
+        log_error("Reading file failed, fp NULL");
+        return -1;
+    }
     root = xmlDocGetRootElement(document);
 
     char expectedRootName[] = "EtherCATInfoList"; 
@@ -319,13 +322,13 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
 }
 
 void terminate_pdo(EcatPdo *pdo){
-    //free(pdo->datatype);
-    //free(pdo->entryname);
-    //free(pdo->fixed);
-    //free(pdo->mandatory);
-    //free(pdo->name);
-    //free(pdo->pdotype);
-    //free(pdo->subindex);
+    free(pdo->datatype);
+    free(pdo->entryname);
+    free(pdo->fixed);
+    free(pdo->mandatory);
+    free(pdo->name);
+    free(pdo->pdotype);
+    free(pdo->subindex);
 }
 
 void terminate_slaveconfig(SlaveConfig *s){
@@ -335,9 +338,11 @@ void terminate_slaveconfig(SlaveConfig *s){
     free(s->RxPDO);
     free(s->TxPDO);
     free(s->name);
+    free(s->type);
 }
 
 void terminate_xml_parsed_conf(){
+    if(ecat_config == NULL)return;
     for (int i = 0; i < ecat_config->slave_count;i++){
         terminate_slaveconfig(&ecat_config->slavesConfig[i]);
     }
