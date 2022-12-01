@@ -70,7 +70,7 @@ and by infomation from `sudo ethercat master` which shows state of master interf
 
 At this point, OpenPLC may be built and installed
 
-cd to OpenPLC_v3 source folder and `./install.sh linux` for regular OpenPLC runtime install.
+cd to OpenPLC_v3 source folder and `./install.sh linux ethercat` to install OpenPLC along with ethercat_src
 
 ethercat_src is controlled by conf files, in the OpenPLC folder `OpenPLC_v3/utils/ethercat_src/build/ethercat.cfg` are the main options
 
