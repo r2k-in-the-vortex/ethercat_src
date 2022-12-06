@@ -22,7 +22,7 @@ sudo apt-get install libxml2-dev
 
 to install ethercat capable branch of OpenPLC 
 ```bash
-git clone https://github.com/r2k-in-the-vortex/OpenPLC_v3
+git clone https://github.com/thiagoralves/OpenPLC_v3.git
 cd OpenPLC_v3
 ```
 
