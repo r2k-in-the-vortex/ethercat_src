@@ -16,8 +16,11 @@ Reference hardware is Raspberry pi 4
 
 Some dependancies should be checked to exist
 ```bash
+sudo apt-get update
 sudo apt-get install udev
 sudo apt-get install libxml2-dev
+sudo apt-get install autoconf
+sudo apt-get install libtool
 ```
 
 to install ethercat capable branch of OpenPLC 
@@ -63,8 +66,14 @@ save the file and exit
 
 a device reboot at this point is recommended
 
-After startup etherlabs master should be running, this can be verified by `ls dev/EtherCAT0` 
-and by infomation from `sudo ethercat master` which shows state of master interface. `ethercat --help` for more information
+After startup etherlabs master should be running, this can be verified by `ls /dev/EtherCAT0` 
+and by infomation from `sudo ethercat master` which shows state of master interface. `ethercat --help` for more information.
+
+if EtherCAT0 doesn't run, try to start it with 
+```
+systemctl start ethercat   # For systemd based distro
+/etc/init.d/ethercat start # For init.d based distro
+```
 
 `sudo ethercat rescan` and `sudo ethercat xml` obtains ethercat slave configuration which needs to be given to ethercat_src
 
