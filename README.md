@@ -97,3 +97,27 @@ Slave0_Channel_3 AT %IX2.0 : BOOL; (* EK1814 EtherCAT-EA-Koppler (1A E-Bus, 4 K.
 
 These variables must be copied into PLC program and used to access the IO
 
+This is how the runtime log should look like if EtherCAT is installed and configured properly
+
+![image](https://github.com/r2k-in-the-vortex/ethercat_src/assets/30666740/b70c32f4-fa37-4bee-890b-bbf8ec4fc084)
+
+If everything goes well then EtherCAT status will progress like so
+```bash
+4 slave(s).
+AL states: PREOP.
+Link is up.
+Domain1: WC 3.
+Domain1: State 1.
+Domain1: WC 4.
+Domain1: WC 5.
+Domain1: WC 7.
+Domain1: State 2.
+AL states: OP.
+```
+
+WC or Working Counter is incremented each time a device successfully reads or writes from the datagram and as such is diagnostic indicator to show all the configured slaves recieved and sent their data.
+Correct WC value depends on how many and which devices are configured.
+
+Domain1: State 2. is good state
+
+AL states: OP. means all slave devices are operational
