@@ -21,6 +21,8 @@
 #include "ecat_handler.h"
 #include "log.h"
 #include "ethercat_src.h"
+#include <time.h>
+
 
 #define BUFFER_SIZE 1024
 /****************************************************************************/
@@ -35,6 +37,18 @@ uint16_t *int_input_call_back(int a){ return &longvar; }
 uint16_t *int_output_call_back(int a){ return &longvar; }
 void logger_callbackf(unsigned char *msg){ printf("PLC log: %s", msg); }
 
+//-----------------------------------------------------------------------------
+// Helper function - Makes the running thread sleep for the ammount of time
+// in milliseconds
+//-----------------------------------------------------------------------------
+void sleepms(int milliseconds)
+{
+	struct timespec ts;
+	ts.tv_sec = milliseconds / 1000;
+	ts.tv_nsec = (milliseconds % 1000) * 1000000;
+	nanosleep(&ts, NULL);
+}
+
 int main (int argc, char **argv){
     type_logger_callback logger = logger_callbackf; 
     ethercat_configure(argv[1], logger);
@@ -45,7 +59,7 @@ int main (int argc, char **argv){
     int16var_call_back int_input_callback = int_input_call_back;
     int16var_call_back int_output_callback = int_output_call_back;
 
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 100; i++){
         ethercat_callcyclic(BUFFER_SIZE, 
             bool_input_callback, 
             bool_output_callback, 
@@ -53,6 +67,8 @@ int main (int argc, char **argv){
             byte_output_callback, 
             int_input_callback, 
             int_output_callback);
+            
+        sleepms(100);
     }
 
     ethercat_terminate_src();

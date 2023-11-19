@@ -171,8 +171,19 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         rxp[i].index = rxpdo.index;
         rxp[i].n_entries = 1;
         ss[rxpdo.sm].dir = EC_DIR_OUTPUT;
+        /*
+        if for example 
+        22:52:44 Sync master 0 EC_DIR_OUTPUT
+        22:52:46 PDO index 1/1  0x1A00 entryindex 0x3101 subindex 1 bitlen 8
+        22:52:56 Sync master 1 EC_DIR_OUTPUT
+        22:53:03 PDO index 1/1  0x1A01 entryindex 0x3101 subindex 2 bitlen 8
+
+        then assuming RxPDO entries are in correct order
+
+        if one entry sm0, another sm1 and then again sm0, then problem
+        */
+        if (ss[rxpdo.sm].n_pdos == 0)ss[rxpdo.sm].pdos = rxp + i;
         ss[rxpdo.sm].n_pdos++;
-        ss[rxpdo.sm].pdos = rxp;
         if(RegisterRxInDomain(slave, &rxe[i], &rxpdo)){
             log_error("Failed to register RxPDO in domain");
             return -1;
@@ -189,8 +200,8 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         txp[i].index = txpdo.index;
         txp[i].n_entries = 1;
         ss[txpdo.sm].dir = EC_DIR_INPUT;
+        if (ss[txpdo.sm].n_pdos == 0)ss[txpdo.sm].pdos = txp + i;
         ss[txpdo.sm].n_pdos++;
-        ss[txpdo.sm].pdos = txp;
         if(RegisterTxInDomain(slave, &txe[i], &txpdo)){
             log_error("Failed to register TxPDO in domain");
             return -1;
@@ -558,10 +569,14 @@ int EtherCATcyclic(int buffersize,
                 }
             } else if(pdo.bitlength == 8){
                 uint8_t *ptr = byte_input(i);
-                *ptr = config->config_only_flag ? 0 : EC_READ_U8(domain1_pd + pdo.offset);
+                if(!config->config_only_flag && ptr){
+                    *ptr = EC_READ_U8(domain1_pd + pdo.offset);
+                }
             } else if(pdo.bitlength == 16){
                 uint16_t *ptr = word_input(i);
-                *ptr = config->config_only_flag ? 0 : EC_READ_U16(domain1_pd + pdo.offset);
+                if(!config->config_only_flag && ptr){
+                    *ptr = EC_READ_U16(domain1_pd + pdo.offset);
+                }
             }
         }
         
@@ -579,10 +594,14 @@ int EtherCATcyclic(int buffersize,
                 }
             } else if(pdo.bitlength == 8){
                 uint8_t *ptrout = byte_output(i);
-                if(!config->config_only_flag) EC_WRITE_U8(domain1_pd + pdo.offset, *ptrout);
+                if(!config->config_only_flag && ptrout){
+                    EC_WRITE_U8(domain1_pd + pdo.offset, *ptrout);
+                }
             } else if(pdo.bitlength == 16){
                 uint16_t *ptrout = word_output(i);
-                if(!config->config_only_flag) EC_WRITE_U16(domain1_pd + pdo.offset, *ptrout);
+                if(!config->config_only_flag && ptrout){
+                    EC_WRITE_U16(domain1_pd + pdo.offset, *ptrout);
+                }
             }
         }
     }
