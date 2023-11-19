@@ -9,11 +9,12 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/ethercat_src_test",
-            "args": ["${workspaceFolder}/conf/ethercatcfg.txt"],
+            "args": ["${workspaceFolder}/build/ethercat.cfg"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
+            "miDebuggerPath": "/home/pi/gdb.sh",
             "MIMode": "gdb",
             "setupCommands": [
                 {
