@@ -159,6 +159,8 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     for (int i = 0;i < slave->sm_count;i++) {
         ss[i].index    = i;       // indexes
         ss[i].n_pdos   = 0;       // to be counted
+        ss[i].dir   = EC_DIR_INPUT;       // set default
+        ss[i].watchdog_mode   = EC_WD_DEFAULT;       // set default
     }
 
     // rx pdos
