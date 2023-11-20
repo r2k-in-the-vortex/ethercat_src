@@ -7,6 +7,8 @@ extern "C"{
 typedef u_int8_t *(*boolvar_call_back) (int, int);
 typedef u_int8_t *(*int8var_call_back) (int);
 typedef u_int16_t *(*int16var_call_back) (int);
+typedef u_int32_t *(*int32var_call_back) (int);
+typedef u_int64_t *(*int64var_call_back) (int);
 typedef void (*type_logger_callback) (unsigned char*);
 
 // Setup before realtime
@@ -19,7 +21,11 @@ int ethercat_callcyclic(int buffersize,
     int8var_call_back byte_input, 
     int8var_call_back byte_output, 
     int16var_call_back word_input, 
-    int16var_call_back word_output);
+    int16var_call_back word_output, 
+    int32var_call_back dword_input, 
+    int32var_call_back dword_output, 
+    int64var_call_back lword_input, 
+    int64var_call_back lword_output);
     
 // CoE access
 int ethercat_read_sdo();

@@ -145,13 +145,17 @@ int ethercat_configure(char *paramsfile, type_logger_callback logfptr){
 }
 
 int ethercat_callcyclic(int buffersize, 
-        boolvar_call_back bool_input, 
-        boolvar_call_back bool_output, 
-        int8var_call_back byte_input, 
-        int8var_call_back byte_output, 
-        int16var_call_back word_input, 
-        int16var_call_back word_output){
-    return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output);
+    boolvar_call_back bool_input, 
+    boolvar_call_back bool_output, 
+    int8var_call_back byte_input, 
+    int8var_call_back byte_output, 
+    int16var_call_back word_input, 
+    int16var_call_back word_output, 
+    int32var_call_back dword_input, 
+    int32var_call_back dword_output, 
+    int64var_call_back lword_input, 
+    int64var_call_back lword_output){
+    return EtherCATcyclic(buffersize, bool_input, bool_output, byte_input, byte_output, word_input, word_output, dword_input, dword_output, lword_input, lword_output);
 }
 
 int ethercat_read_sdo(){
