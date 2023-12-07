@@ -35,6 +35,7 @@ ethercat_src is arranged as submodules so these need to be fetched
 git submodule init
 git submodule update
 cd utils/ethercat_src
+git checkout main
 
 git submodule init
 git submodule update
