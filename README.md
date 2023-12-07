@@ -16,13 +16,16 @@ Reference hardware is Raspberry pi 4
 
 Some dependancies should be checked to exist
 ```bash
+sudo apt-get update
 sudo apt-get install udev
 sudo apt-get install libxml2-dev
+sudo apt-get install autoconf
+sudo apt-get install libtool
 ```
 
 to install ethercat capable branch of OpenPLC 
 ```bash
-git clone https://github.com/r2k-in-the-vortex/OpenPLC_v3
+git clone https://github.com/thiagoralves/OpenPLC_v3.git
 cd OpenPLC_v3
 ```
 
@@ -63,8 +66,14 @@ save the file and exit
 
 a device reboot at this point is recommended
 
-After startup etherlabs master should be running, this can be verified by `ls dev/EtherCAT0` 
-and by infomation from `sudo ethercat master` which shows state of master interface. `ethercat --help` for more information
+After startup etherlabs master should be running, this can be verified by `ls /dev/EtherCAT0` 
+and by infomation from `sudo ethercat master` which shows state of master interface. `ethercat --help` for more information.
+
+if EtherCAT0 doesn't run, try to start it with 
+```
+systemctl start ethercat   # For systemd based distro
+/etc/init.d/ethercat start # For init.d based distro
+```
 
 `sudo ethercat rescan` and `sudo ethercat xml` obtains ethercat slave configuration which needs to be given to ethercat_src
 
@@ -88,3 +97,27 @@ Slave0_Channel_3 AT %IX2.0 : BOOL; (* EK1814 EtherCAT-EA-Koppler (1A E-Bus, 4 K.
 
 These variables must be copied into PLC program and used to access the IO
 
+This is how the runtime log should look like if EtherCAT is installed and configured properly
+
+![image](https://github.com/r2k-in-the-vortex/ethercat_src/assets/30666740/b70c32f4-fa37-4bee-890b-bbf8ec4fc084)
+
+If everything goes well then EtherCAT status will progress like so
+```bash
+4 slave(s).
+AL states: PREOP.
+Link is up.
+Domain1: WC 3.
+Domain1: State 1.
+Domain1: WC 4.
+Domain1: WC 5.
+Domain1: WC 7.
+Domain1: State 2.
+AL states: OP.
+```
+
+WC or Working Counter is incremented each time a device successfully reads or writes from the datagram and as such is diagnostic indicator to show all the configured slaves recieved and sent their data.
+Correct WC value depends on how many and which devices are configured.
+
+Domain1: State 2. is good state
+
+AL states: OP. means all slave devices are operational
