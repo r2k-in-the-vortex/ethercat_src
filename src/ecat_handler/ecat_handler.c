@@ -259,13 +259,9 @@ int NameTypeAndPrefix(PdoRegistryEntry *pdo, char *name, char *prefix, char *dty
     } else if (pdo->bitlength == 32){
         strcpy(dtype, "DINT");
         strcpy(prefix, "D");
-        log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
-        return -1;
     } else if (pdo->bitlength == 64){
         strcpy(dtype, "LINT");
         strcpy(prefix, "L");
-        log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
-        return -1;
     } else{
         log_error("Bitlen %i not implemented and not supported", pdo->bitlength);
         return -1;
@@ -511,7 +507,11 @@ int EtherCATcyclic(int buffersize,
         int8var_call_back byte_input, 
         int8var_call_back byte_output, 
         int16var_call_back word_input, 
-        int16var_call_back word_output){
+        int16var_call_back word_output, 
+        int32var_call_back dword_input, 
+        int32var_call_back dword_output, 
+        int64var_call_back lword_input, 
+        int64var_call_back lword_output){
 
     if(!config_done)return 0;
     if(!msgonce){
@@ -579,6 +579,16 @@ int EtherCATcyclic(int buffersize,
                 if(!config->config_only_flag && ptr){
                     *ptr = EC_READ_U16(domain1_pd + pdo.offset);
                 }
+            } else if(pdo.bitlength == 32){
+                uint32_t *ptr = dword_input(i);
+                if(!config->config_only_flag && ptr){
+                    *ptr = EC_READ_U32(domain1_pd + pdo.offset);
+                }
+            } else if(pdo.bitlength == 64){
+                uint64_t *ptr = lword_input(i);
+                if(!config->config_only_flag && ptr){
+                    *ptr = EC_READ_U64(domain1_pd + pdo.offset);
+                }
             }
         }
         
@@ -603,6 +613,16 @@ int EtherCATcyclic(int buffersize,
                 uint16_t *ptrout = word_output(i);
                 if(!config->config_only_flag && ptrout){
                     EC_WRITE_U16(domain1_pd + pdo.offset, *ptrout);
+                }
+            } else if(pdo.bitlength == 32){
+                uint32_t *ptrout = dword_output(i);
+                if(!config->config_only_flag && ptrout){
+                    EC_WRITE_U32(domain1_pd + pdo.offset, *ptrout);
+                }
+            } else if(pdo.bitlength == 64){
+                uint64_t *ptrout = lword_output(i);
+                if(!config->config_only_flag && ptrout){
+                    EC_WRITE_U64(domain1_pd + pdo.offset, *ptrout);
                 }
             }
         }

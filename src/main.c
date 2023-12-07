@@ -29,12 +29,18 @@
 
 uint8_t shortvar = 0;
 uint16_t longvar = 0;
+uint32_t dwordvar = 0;
+uint64_t lwordvar = 0;
 uint8_t *bool_input_call_back(int a, int b){ return &shortvar; }
 uint8_t *bool_output_call_back(int a, int b){ return &shortvar; }
 uint8_t *byte_input_call_back(int a){ return &shortvar; }
 uint8_t *byte_output_call_back(int a){ return &shortvar; }
 uint16_t *int_input_call_back(int a){ return &longvar; }
 uint16_t *int_output_call_back(int a){ return &longvar; }
+uint32_t *dint_input_call_back(int a){ return &dwordvar; }
+uint32_t *dint_output_call_back(int a){ return &dwordvar; }
+uint64_t *lint_input_call_back(int a){ return &lwordvar; }
+uint64_t *lint_output_call_back(int a){ return &lwordvar; }
 void logger_callbackf(unsigned char *msg){ printf("PLC log: %s", msg); }
 
 //-----------------------------------------------------------------------------
@@ -58,6 +64,10 @@ int main (int argc, char **argv){
     int8var_call_back byte_output_callback = byte_output_call_back;
     int16var_call_back int_input_callback = int_input_call_back;
     int16var_call_back int_output_callback = int_output_call_back;
+    int32var_call_back dint_input_callback = dint_input_call_back;
+    int32var_call_back dint_output_callback = dint_output_call_back;
+    int64var_call_back lint_input_callback = lint_input_call_back;
+    int64var_call_back lint_output_callback = lint_output_call_back;
 
     for (int i = 0; i < 100; i++){
         ethercat_callcyclic(BUFFER_SIZE, 
@@ -66,7 +76,11 @@ int main (int argc, char **argv){
             byte_input_callback, 
             byte_output_callback, 
             int_input_callback, 
-            int_output_callback);
+            int_output_callback, 
+            dint_input_callback, 
+            dint_output_callback, 
+            lint_input_callback, 
+            lint_output_callback);
             
         sleepms(100);
     }
