@@ -122,3 +122,29 @@ Correct WC value depends on how many and which devices are configured.
 Domain1: State 2. is good state
 
 AL states: OP. means all slave devices are operational
+
+# Advanced devices
+
+Some devices like many servo drives will not start up unless they are correctly configured, which involves Service Data Objects
+
+OpenPLC and ethercat_src provide no means to configure SDOs, but IgH EtherCAT master does
+
+For example, running the following script before starting OpenPLC prepares EL7047 stepper driver in pos 4 for OP mode, it will not enter OP mode without this configuration
+
+```bash
+ethercat states preop
+sleep 3
+ethercat download -p 4 -t uint16 0x10f3 5 0x0000
+ethercat download -p 4 -t uint32 0xf081 1 0x00100000
+ethercat download -p 4 -t uint8 0x1c12 0 0x00
+ethercat download -p 4 -t uint8 0x1c13 0 0x00
+ethercat download -p 4 -t uint16 0x1c12 1 0x1600
+ethercat download -p 4 -t uint16 0x1c12 2 0x1602
+ethercat download -p 4 -t uint16 0x1c12 3 0x1604
+ethercat download -p 4 -t uint16 0x1c13 1 0x1a00
+ethercat download -p 4 -t uint16 0x1c13 1 0x1a03
+ethercat download -p 4 -t uint8 0x1c12 0 0x03
+ethercat download -p 4 -t uint8 0x1c13 0 0x02
+```
+
+The specific list of parameters and in which order they have to be written is device specific, one way to determine correct configuration is to set the device up in TwinCAT or other commercial EtherCAT capable PLC software and copy the configuration from there. For example [startup tab in TwinCAT](https://infosys.beckhoff.com/english.php?content=../content/1033/tc3_io_intro/1345265931.html&id=)
