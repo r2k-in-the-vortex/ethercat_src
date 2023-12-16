@@ -248,7 +248,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         ss[txpdo.sm].n_pdos++;
 
         for (int entryidx = 0; entryidx < txpdo.entrycount; entryidx++){
-            txe[txentryidx].subindex = txpdoidx + 1;
+            txe[txentryidx].subindex = txpdo.entries[entryidx].subindex;
             txe[txentryidx].index = txpdo.entries[entryidx].entryindex;
             txe[txentryidx].bit_length = txpdo.entries[entryidx].bitlen;
 
