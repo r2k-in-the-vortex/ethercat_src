@@ -202,7 +202,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     // rx pdos
     for (int rxpdoidx = 0;rxpdoidx < slave->RxPdo_count;rxpdoidx++){
         EcatPdo rxpdo = slave->RxPDO[rxpdoidx];
-        rxp[rxpdoidx].entries = &rxe[rxpdoidx];
+        rxp[rxpdoidx].entries = &rxe[rxentryidx];
         rxp[rxpdoidx].index = rxpdo.index;
         rxp[rxpdoidx].n_entries = rxpdo.entrycount;
         ss[rxpdo.sm].dir = EC_DIR_OUTPUT;
@@ -238,7 +238,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
     // tx pdos
     for (int txpdoidx = 0;txpdoidx < slave->TxPdo_count;txpdoidx++){
         EcatPdo txpdo = slave->TxPDO[txpdoidx];
-        txp[txpdoidx].entries = &txe[txpdoidx];
+        txp[txpdoidx].entries = &txe[txentryidx];
         txp[txpdoidx].index = txpdo.index;
         txp[txpdoidx].n_entries = txpdo.entrycount;
         ss[txpdo.sm].dir = EC_DIR_INPUT;
@@ -252,7 +252,7 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
             txe[txentryidx].index = txpdo.entries[entryidx].entryindex;
             txe[txentryidx].bit_length = txpdo.entries[entryidx].bitlen;
 
-            if(RegisterTxInDomain(slave, &txe[txpdoidx], &txpdo, txpdo.entries[entryidx].entryname)){
+            if(RegisterTxInDomain(slave, &txe[txentryidx], &txpdo, txpdo.entries[entryidx].entryname)){
                 log_error("Failed to register TxPDO in domain");
                 return -1;
             }
@@ -260,20 +260,20 @@ int ConfigureSlave(EcatConfig *config, SlaveConfig *slave, ec_slave_config_t *sc
         }
     }
 
-    for (int i = 0; i < slave->sm_count;i++){
+    for (int smidx = 0; smidx < slave->sm_count;smidx++){
         char *dir = "[error invalid direction]";
-        if (ss[i].dir == EC_DIR_INPUT)dir = "EC_DIR_INPUT";
-        if (ss[i].dir == EC_DIR_OUTPUT)dir = "EC_DIR_OUTPUT";
-        log_trace("Sync master %i %s", i, dir);
-        for (int j = 0; j < ss[i].n_pdos; j++){
-            for (int entryidx = 0; entryidx < ss[i].pdos[j].n_entries; entryidx++){
+        if (ss[smidx].dir == EC_DIR_INPUT)dir = "EC_DIR_INPUT";
+        if (ss[smidx].dir == EC_DIR_OUTPUT)dir = "EC_DIR_OUTPUT";
+        log_trace("Sync master %i %s", smidx, dir);
+        for (int pdoidx = 0; pdoidx < ss[smidx].n_pdos; pdoidx++){
+            for (int entryidx = 0; entryidx < ss[smidx].pdos[pdoidx].n_entries; entryidx++){
                 log_trace("PDO index %i/%i  0x%4X entryindex 0x%4X subindex %i bitlen %i", 
-                    j + 1,
-                    ss[i].n_pdos,
-                    ss[i].pdos[j].index, 
-                    ss[i].pdos[j].entries[entryidx].index, 
-                    ss[i].pdos[j].entries[entryidx].subindex, 
-                    ss[i].pdos[j].entries[entryidx].bit_length);
+                    pdoidx + 1,
+                    ss[smidx].n_pdos,
+                    ss[smidx].pdos[pdoidx].index, 
+                    ss[smidx].pdos[pdoidx].entries[entryidx].index, 
+                    ss[smidx].pdos[pdoidx].entries[entryidx].subindex, 
+                    ss[smidx].pdos[pdoidx].entries[entryidx].bit_length);
             }
         }
     }
