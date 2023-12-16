@@ -43,7 +43,7 @@ typedef struct _EcatPdoEntry EcatPdoEntry;
 typedef EcatPdoEntry *EcatPdoEntryPtr;
 struct _EcatPdoEntry{
     uint16_t            entryindex;                         // entry index
-    char                *subindex;                          // entry subindex
+    uint8_t             subindex;                           // entry subindex
     uint8_t             bitlen;                             // bit length, 1, 8, 16, 32
     char                *entryname;                         // entryname, arbritary, usually Input/Output, but can be descriptive
     char                *datatype;                          // datatype, BOOL for bitlen 1, others...

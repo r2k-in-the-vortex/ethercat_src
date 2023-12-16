@@ -176,13 +176,14 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
         char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
         
         pdoentry->entryindex = (uint16_t)hexstrtoint32(entryindex);
-        pdoentry->subindex = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex")));
+        char *subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+        pdoentry->subindex = (uint8_t)strtol(subindex, &ptr, 10);
         char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
         pdoentry->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
         pdoentry->entryname = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "Name")));
         pdoentry->datatype = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "DataType")));
         entry = getNextNodeNamed(entry->next, "Entry");
-        log_trace("%s 0x%X %s %i %s", pdoentry->entryname, pdoentry->entryindex, pdoentry->subindex, pdoentry->bitlen, pdoentry->datatype);
+        log_trace("%s 0x%X %i %i %s", pdoentry->entryname, pdoentry->entryindex, pdoentry->subindex, pdoentry->bitlen, pdoentry->datatype);
     }
     return 0;
 }
@@ -339,7 +340,6 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
 void terminate_entry(EcatPdoEntry *entry){
     free(entry->datatype);
     free(entry->entryname);
-    free(entry->subindex);
 }
 
 void terminate_pdo(EcatPdo *pdo){
