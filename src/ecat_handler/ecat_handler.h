@@ -35,6 +35,21 @@ struct _EcatSm{
 };
 
 /**
+ * EcatPdoEntry:
+ *
+ * Device recieve, PLC output
+ */
+typedef struct _EcatPdoEntry EcatPdoEntry;
+typedef EcatPdoEntry *EcatPdoEntryPtr;
+struct _EcatPdoEntry{
+    uint16_t            entryindex;                         // entry index
+    uint8_t             subindex;                           // entry subindex
+    uint8_t             bitlen;                             // bit length, 1, 8, 16, 32
+    char                *entryname;                         // entryname, arbritary, usually Input/Output, but can be descriptive
+    char                *datatype;                          // datatype, BOOL for bitlen 1, others...
+};
+
+/**
  * EcatPdo:
  *
  * Device recieve, PLC output
@@ -42,17 +57,14 @@ struct _EcatSm{
 typedef struct _EcatPdo EcatPdo;
 typedef EcatPdo *EcatPdoPtr;
 struct _EcatPdo{
-    char                *pdotype;                           // RxPdo or TxPdo
-    uint16_t            sm;                                 // sm index
-    char                *fixed;                             // fixed attr
-    char                *mandatory;                         // mandatory attr
-    uint16_t            index;                              // pdo index
-    char                *name;                              // pdo name
-    uint16_t            entryindex;                         // entry index
-    char                *subindex;                          // entry subindex
-    uint8_t             bitlen;                             // bit length, 1, 8, 16, 32
-    char                *entryname;                         // entryname, arbritary, usually Input/Output, but can be descriptive
-    char                *datatype;                          // datatype, BOOL for bitlen 1, others...
+    char                                *pdotype;                           // RxPdo or TxPdo
+    uint16_t                            sm;                                 // sm index
+    char                                *fixed;                             // fixed attr
+    char                                *mandatory;                         // mandatory attr
+    uint16_t                            index;                              // pdo index
+    char                                *name;                              // pdo name
+    uint16_t                            entrycount;                         // how many entries
+    struct _EcatPdoEntry                *entries;                           // entires
 };
 
 /**
@@ -78,8 +90,10 @@ struct _SlaveConfig{
     uint32_t                sm_count;                       // number of specified Sync managers
     struct _EcatSm          *Sm;                            // Sm collection
     uint32_t                RxPdo_count;                    // number of specified RxPDO
+    uint32_t                RxEntry_count;                  // number of specified Rx entries
     struct _EcatPdo         *RxPDO;                         // RxPDO collection
     uint32_t                TxPdo_count;                    // number of specified TxPDO
+    uint32_t                TxEntry_count;                  // number of specified Tx entries
     struct _EcatPdo         *TxPDO;                         // TxPDO collection
 };
 

@@ -164,15 +164,27 @@ int ParsePdo(xmlNode *node, EcatPdo *pdo){
     char *index = getNodeTextContent(getSingularnodeNamed(node->children, "Index"));
     pdo->index = (uint16_t)hexstrtoint32(index);
     pdo->name = strmcpy(getNodeTextContent(getSingularnodeNamed(node->children, "Name")));
-    entry = getSingularnodeNamed(node->children, "Entry");
-    char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
-    pdo->entryindex = (uint16_t)hexstrtoint32(entryindex);
-    pdo->subindex = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex")));
-    char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
-    pdo->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
-    pdo->entryname = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "Name")));
-    pdo->datatype = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "DataType")));
-    log_trace("%s %i %s %s 0x%X %s 0x%X %s %i %s %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name, pdo->entryindex, pdo->subindex, pdo->bitlen, pdo->entryname, pdo->datatype);
+
+    pdo->entrycount = countNodesNamed(node->children, "Entry");
+    pdo->entries = (EcatPdoEntry*) malloc(pdo->entrycount * sizeof(EcatPdoEntry));
+
+    log_trace("%s %i %s %s 0x%X %s", pdo->pdotype, pdo->sm, pdo->fixed, pdo->mandatory, pdo->index, pdo->name);
+    entry = getNextNodeNamed(node->children, "Entry");
+    for (int i = 0; i<pdo->entrycount; i++){
+        EcatPdoEntry *pdoentry = &pdo->entries[i];
+        
+        char *entryindex = getNodeTextContent(getSingularnodeNamed(entry->children, "Index"));
+        
+        pdoentry->entryindex = (uint16_t)hexstrtoint32(entryindex);
+        char *subindex = getNodeTextContent(getSingularnodeNamed(entry->children, "SubIndex"));
+        pdoentry->subindex = (uint8_t)strtol(subindex, &ptr, 10);
+        char *bitlen = getNodeTextContent(getSingularnodeNamed(entry->children, "BitLen"));
+        pdoentry->bitlen = (uint8_t)strtol(bitlen, &ptr, 10);
+        pdoentry->entryname = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "Name")));
+        pdoentry->datatype = strmcpy(getNodeTextContent(getSingularnodeNamed(entry->children, "DataType")));
+        entry = getNextNodeNamed(entry->next, "Entry");
+        log_trace("%s 0x%X %i %i %s", pdoentry->entryname, pdoentry->entryindex, pdoentry->subindex, pdoentry->bitlen, pdoentry->datatype);
+    }
     return 0;
 }
 
@@ -215,6 +227,8 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
 
     config->RxPdo_count = countNodesNamed(device->children, "RxPdo");
     config->TxPdo_count = countNodesNamed(device->children, "TxPdo");
+    config->RxEntry_count = 0;
+    config->TxEntry_count = 0;
     log_trace("RxPdos %i | TxPdos %i", config->RxPdo_count, config->TxPdo_count);
 
     EcatPdo *RxPdos, *TxPdos;
@@ -228,12 +242,14 @@ int ParseDescriptions(xmlNode *descriptions, SlaveConfig *config){
     for (int i = 0; i< config->RxPdo_count;i++){
         start = getNextNodeNamed(start, "RxPdo");
         ParsePdo(start, &RxPdos[i]);
+        config->RxEntry_count += RxPdos[i].entrycount;
         start = start->next;
     }
     start = device->children;
     for (int i = 0; i< config->TxPdo_count;i++){
         start = getNextNodeNamed(start, "TxPdo");
         ParsePdo(start, &TxPdos[i]);
+        config->TxEntry_count += TxPdos[i].entrycount;
         start = start->next;
     }
 
@@ -321,14 +337,18 @@ int parse_xml_config(char *filename, EcatConfig *newconfig){
     return 0;
 }
 
+void terminate_entry(EcatPdoEntry *entry){
+    free(entry->datatype);
+    free(entry->entryname);
+}
+
 void terminate_pdo(EcatPdo *pdo){
-    free(pdo->datatype);
-    free(pdo->entryname);
+    for (int i = 0; i < pdo->entrycount; i++) terminate_entry(&pdo->entries[i]);
+    free(pdo->entries);
     free(pdo->fixed);
     free(pdo->mandatory);
     free(pdo->name);
     free(pdo->pdotype);
-    free(pdo->subindex);
 }
 
 void terminate_slaveconfig(SlaveConfig *s){
