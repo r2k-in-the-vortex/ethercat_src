@@ -9,7 +9,7 @@ typedef u_int8_t *(*int8var_call_back) (int);
 typedef u_int16_t *(*int16var_call_back) (int);
 typedef u_int32_t *(*int32var_call_back) (int);
 typedef u_int64_t *(*int64var_call_back) (int);
-typedef void (*type_logger_callback) (unsigned char*);
+typedef void (*type_logger_callback) (char*);
 
 // Setup before realtime
 int ethercat_configure(char *paramsfile, type_logger_callback);

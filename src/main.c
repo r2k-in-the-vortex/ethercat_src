@@ -41,7 +41,7 @@ uint32_t *dint_input_call_back(int a){ return &dwordvar; }
 uint32_t *dint_output_call_back(int a){ return &dwordvar; }
 uint64_t *lint_input_call_back(int a){ return &lwordvar; }
 uint64_t *lint_output_call_back(int a){ return &lwordvar; }
-void logger_callbackf(unsigned char *msg){ printf("PLC log: %s", msg); }
+void logger_callbackf(char *msg){ printf("PLC log: %s", msg); }
 
 //-----------------------------------------------------------------------------
 // Helper function - Makes the running thread sleep for the ammount of time
